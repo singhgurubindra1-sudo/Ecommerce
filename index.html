@@ -28,10 +28,12 @@
     <button data-go="home">Home</button>
     <button data-go="collection">Collection</button>
     <button data-go="studio">The Studio</button>
+    <button data-go="feedback">Feedback</button>
     <button data-go="contact">Contact</button>
   </nav>
   <div class="nav-actions">
-    <button id="bag-btn" class="bag-btn" aria-label="Open bag">Bag <span id="bag-count">0</span></button>
+    <button id="wish-btn" class="bag-btn" aria-label="Open wishlist">♥ <span id="wish-count" class="count">0</span></button>
+    <button id="bag-btn" class="bag-btn" aria-label="Open cart">Cart <span id="bag-count" class="count">0</span></button>
     <button id="menu-btn" class="menu-btn" aria-label="Open menu"><span></span><span></span></button>
   </div>
 </header>
@@ -48,8 +50,8 @@
   </section>
 
   <div class="ticker" aria-hidden="true"><div class="ticker-run">
-    <span>New season</span><b>✦</b><span>Small batches</span><b>✦</b><span>Natural fibres</span><b>✦</b><span>Free repairs for life</span><b>✦</b>
-    <span>New season</span><b>✦</b><span>Small batches</span><b>✦</b><span>Natural fibres</span><b>✦</b><span>Free repairs for life</span><b>✦</b>
+    <span>New season</span><b>✦</b><span>Small batches</span><b>✦</b><span>Natural fibres</span><b>✦</b><span>Cash on delivery</span><b>✦</b>
+    <span>New season</span><b>✦</b><span>Small batches</span><b>✦</b><span>Natural fibres</span><b>✦</b><span>Cash on delivery</span><b>✦</b>
   </div></div>
 
   <section class="collection" id="collection">
@@ -77,6 +79,27 @@
     </div>
   </section>
 
+  <section class="feedback" id="feedback">
+    <div class="wrap fb-grid">
+      <div class="rv">
+        <p class="eyebrow">Feedback</p>
+        <h2 class="display sm">Tell us <em>what you think.</em></h2>
+        <p class="lede">Bought something, or just browsing? Your feedback shapes the next run.</p>
+        <form id="fb-form" class="form" novalidate>
+          <div class="field"><label for="fb-name">Your name</label><input id="fb-name" type="text" autocomplete="name" maxlength="40"></div>
+          <div class="field"><label for="fb-product">Product</label><select id="fb-product"></select></div>
+          <div class="field"><span class="lab" id="fb-rate-lab">Rating</span><div class="stars" id="fb-stars" role="radiogroup" aria-labelledby="fb-rate-lab"></div></div>
+          <div class="field"><label for="fb-text">Your feedback</label><textarea id="fb-text" rows="3" maxlength="400"></textarea></div>
+          <button class="btn solid" type="submit">Send feedback</button>
+        </form>
+      </div>
+      <div class="rv">
+        <p class="fb-avg" id="fb-avg"></p>
+        <div id="fb-list" class="fb-list"></div>
+      </div>
+    </div>
+  </section>
+
   <section class="contact" id="contact">
     <div class="wrap">
       <div class="contact-copy rv">
@@ -101,47 +124,96 @@
 
 <div id="scrim"></div>
 
-<aside id="detail" class="panel" aria-hidden="true" aria-label="Product details">
+<aside id="detail" class="panel wide" aria-hidden="true" aria-label="Product details">
   <button class="close" data-close aria-label="Close">×</button>
-  <div class="panel-body">
-    <img id="d-img" class="d-img" alt="">
-    <p class="eyebrow" id="d-cat"></p>
-    <h2 class="d-name" id="d-name"></h2>
-    <p class="d-price" id="d-price"></p>
-    <p class="d-desc" id="d-desc"></p>
-    <p class="d-label">Colour <span id="d-tone"></span></p>
-    <p class="d-label">Size</p>
-    <div class="sizes" id="d-sizes"></div>
-    <div class="buy">
-      <div class="qty"><button id="q-minus" aria-label="Decrease quantity">−</button><span id="q-val">1</span><button id="q-plus" aria-label="Increase quantity">+</button></div>
-      <button class="btn solid" id="add-btn">Add to bag</button>
+  <div class="panel-body d-grid">
+    <div class="d-gallery">
+      <img id="d-img" class="d-img" alt="">
+      <div class="d-thumbs" id="d-thumbs"></div>
     </div>
-    <ul class="d-notes">
-      <li>Free shipping on orders over <span class="cur-150"></span></li>
-      <li>Returns within 14 days</li>
-      <li>Free repairs for life</li>
-    </ul>
+    <div class="d-info">
+      <p class="eyebrow" id="d-cat"></p>
+      <h2 class="d-name" id="d-name"></h2>
+      <p class="d-price" id="d-price"></p>
+      <p class="d-desc" id="d-desc"></p>
+      <p class="d-label">Colour <span id="d-tone"></span></p>
+      <p class="d-label">Size</p>
+      <div class="sizes" id="d-sizes"></div>
+      <div class="buy">
+        <div class="qty"><button id="q-minus" aria-label="Decrease quantity">−</button><span id="q-val">1</span><button id="q-plus" aria-label="Increase quantity">+</button></div>
+        <button class="btn" id="add-btn">Add to cart</button>
+      </div>
+      <button class="btn solid" id="buy-btn">Buy now</button>
+      <button class="wish-toggle" id="d-wish"></button>
+      <ul class="d-notes">
+        <li>Cash on Delivery available</li>
+        <li>Returns within 14 days</li>
+      </ul>
+    </div>
   </div>
 </aside>
 
-<aside id="cart" class="panel" aria-hidden="true" aria-label="Your bag">
+<aside id="cart" class="panel" aria-hidden="true" aria-label="Your cart">
   <button class="close" data-close aria-label="Close">×</button>
   <div class="panel-body">
-    <h2 class="d-name">Your bag</h2>
-    <div id="cart-items"></div>
+    <h2 class="d-name">Your cart</h2>
+    <div id="cart-items" class="items"></div>
     <div class="cart-foot" id="cart-foot">
       <p class="sub"><span>Subtotal</span><b id="cart-total"></b></p>
       <button class="btn solid" id="checkout-btn">Checkout</button>
-      <p class="fine">Shipping and taxes are calculated at checkout.</p>
+      <p class="fine">Pay by Cash on Delivery.</p>
     </div>
   </div>
 </aside>
+
+<aside id="wish" class="panel" aria-hidden="true" aria-label="Your wishlist">
+  <button class="close" data-close aria-label="Close">×</button>
+  <div class="panel-body">
+    <h2 class="d-name">Your wishlist</h2>
+    <div id="wish-items" class="items"></div>
+  </div>
+</aside>
+
+<div id="checkout" class="sheet" aria-hidden="true" role="dialog" aria-label="Checkout">
+  <button class="close" data-close aria-label="Close">×</button>
+  <div class="sheet-in" id="co-main">
+    <form id="co-form" class="form" novalidate>
+      <p class="eyebrow">Checkout</p>
+      <h2 class="d-name">Delivery details</h2>
+      <div class="field"><label for="co-name">Full name</label><input id="co-name" type="text" autocomplete="name"></div>
+      <div class="field"><label for="co-phone">Mobile number</label><input id="co-phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="10-digit number"></div>
+      <div class="field"><label for="co-address">Address</label><textarea id="co-address" rows="2" autocomplete="street-address" placeholder="House no., street, area"></textarea></div>
+      <div class="row3">
+        <div class="field"><label for="co-city">City</label><input id="co-city" type="text" autocomplete="address-level2"></div>
+        <div class="field"><label for="co-state">State</label><input id="co-state" type="text" autocomplete="address-level1"></div>
+        <div class="field"><label for="co-pin">PIN code</label><input id="co-pin" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="6"></div>
+      </div>
+      <h3 class="co-h">Payment</h3>
+      <label class="pay"><input type="radio" name="pay" id="co-cod" checked><span><b>Cash on Delivery</b><i>Pay in cash when your order arrives.</i></span></label>
+      <p class="fine left">Online payments (UPI and cards) are coming soon.</p>
+      <p id="co-err" class="co-err" role="alert"></p>
+      <button class="btn solid" type="submit">Place order · <span id="co-total-btn"></span></button>
+    </form>
+    <div class="co-sum">
+      <h3 class="co-h">Order summary</h3>
+      <div id="co-items" class="items"></div>
+      <p class="sub"><span>Total to pay on delivery</span><b id="co-total"></b></p>
+    </div>
+  </div>
+  <div class="co-done" id="co-done" hidden>
+    <p class="co-star">✦</p>
+    <h2 class="display sm">Order <em>placed.</em></h2>
+    <p class="lede" id="co-done-text"></p>
+    <button class="btn solid" id="co-done-btn">Continue shopping</button>
+  </div>
+</div>
 
 <div id="menu" aria-hidden="true">
   <button class="close" data-close aria-label="Close">×</button>
   <button data-go="home">Home</button>
   <button data-go="collection">Collection</button>
   <button data-go="studio">The Studio</button>
+  <button data-go="feedback">Feedback</button>
   <button data-go="contact">Contact</button>
 </div>
 

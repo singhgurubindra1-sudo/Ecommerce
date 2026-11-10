@@ -20,9 +20,10 @@ Everything lives in `js/products.js`: name, category, price, colour and descript
 
 - `index.html` – markup for the scenes, bag, product panel and menu
 - `css/style.css` – all styling
-- `js/main.js` – hero 3D cloth (three.js), product grid, bag
+- `js/main.js` – product grid, cart, wishlist, feedback, Cash on Delivery checkout
+- `js/hero.js` – hero 3D cloth (three.js)
 - `js/cards.js` – draws the placeholder product cards
 - `js/vendor/` – three.js r170 (MIT)
 - `assets/` – logo files
 
-Checkout and the newsletter form are not connected to a backend yet.
+Prices are in INR. The cart, wishlist, feedback and placed orders are saved only in the visitor's own browser (localStorage). Nothing is sent to a server yet, so orders do not reach the shop until a backend is connected.

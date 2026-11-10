@@ -1,50 +1,61 @@
-import * as THREE from './vendor/three.module.min.js';
 import { PRODUCTS, SIZES, CURRENCY } from './products.js';
-import { drawCard, drawPhotoCard, starSprite } from './cards.js';
+import { drawCard, drawPhotoCard } from './cards.js';
+import { initHero } from './hero.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
-const money = n => CURRENCY + n.toLocaleString('en-US');
+const money = n => CURRENCY + n.toLocaleString('en-IN');
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const byId = id => PRODUCTS.find(p => p.id === id);
 
-const state = { current: 0, size: 'M', qty: 1 };
+const state = { current: 0, size: 'M', qty: 1, checkout: [], fromCart: false, rating: 5 };
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-/* ------------------------------------------------------------------ product cards */
-const thumbs = [];
+// Everything the shopper saves lives in this browser only until a backend is connected.
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private mode */ } };
+let bag = load('forme-bag', {});
+let wish = load('forme-wish', []).filter(byId);
+let feedback = load('forme-feedback', []);
+
+/* ------------------------------------------------------------------ product images */
+const thumbs = {};
 const loadImage = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
 
 async function buildCards() {
   try { await Promise.race([Promise.all([document.fonts.load('400 19px Jost'), document.fonts.load('italic 400 30px "Cormorant Garamond"')]), new Promise(r => setTimeout(r, 2000))]); } catch { /* fallback fonts */ }
   for (let i = 0; i < PRODUCTS.length; i++) {
     const p = PRODUCTS[i];
+    if (p.images?.length) { thumbs[p.id] = p.images[0]; continue; }
     let cv = null;
     if (p.image) { try { cv = drawPhotoCard(await loadImage(p.image)); } catch { cv = null; } }
-    thumbs.push((cv || drawCard(p, i)).toDataURL('image/jpeg', .86));
+    thumbs[p.id] = (cv || drawCard(p, i)).toDataURL('image/jpeg', .86);
   }
 }
 
+/* ------------------------------------------------------------------ grid */
 function renderGrid() {
   const grid = $('#grid');
   PRODUCTS.forEach((p, i) => {
-    const card = document.createElement('article');
-    card.className = 'card rv';
+    const card = el('article', 'card rv');
     card.style.transitionDelay = `${(i % 4) * 70}ms`;
-    const pic = document.createElement('button');
-    pic.className = 'card-pic';
+    const pic = el('button', 'card-pic');
     pic.setAttribute('aria-label', `View ${p.name}`);
-    const img = document.createElement('img');
-    img.src = thumbs[i]; img.alt = `${p.name} in ${p.tone}`; img.loading = 'lazy';
+    const img = el('img');
+    img.src = thumbs[p.id]; img.alt = `${p.name} in ${p.tone}`; img.loading = 'lazy';
     pic.append(img);
-    const h = document.createElement('h3'); h.textContent = p.name;
-    const meta = document.createElement('p'); meta.textContent = p.cat;
-    const price = document.createElement('b'); price.textContent = money(p.price);
-    meta.append(price);
-    card.append(pic, h, meta);
+    const heart = el('button', 'heart');
+    heart.dataset.wish = p.id;
+    heart.addEventListener('click', () => toggleWish(p.id));
+    const meta = el('p', '', p.cat);
+    meta.append(el('b', '', money(p.price)));
+    card.append(pic, heart);
+    if (p.badge) card.append(el('span', 'badge', p.badge));
+    card.append(el('h3', '', p.name), meta);
     pic.addEventListener('click', () => openDetail(i));
     if (fine && !reduce) {
-      // light 3D tilt on hover
       pic.addEventListener('pointermove', e => {
         const r = pic.getBoundingClientRect();
         pic.style.setProperty('--ry', `${((e.clientX - r.left) / r.width - .5) * 14}deg`);
@@ -56,161 +67,196 @@ function renderGrid() {
   });
 }
 
-/* ------------------------------------------------------------------ hero 3D (the only WebGL on the page) */
-function initHero() {
-  const canvas = $('#gl'), hero = $('#home');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: devicePixelRatio < 2, alpha: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-  const scene = new THREE.Scene();
-  const FOV = 40, TAN = Math.tan(THREE.MathUtils.degToRad(FOV / 2));
-  const camera = new THREE.PerspectiveCamera(FOV, 1, .1, 100);
-
-  const mask = new THREE.TextureLoader().load('assets/logo-full.png');
-  const uniforms = { uTime: { value: 0 }, uMask: { value: mask }, uPush: { value: new THREE.Vector2() } };
-  const cloth = new THREE.Mesh(
-    new THREE.PlaneGeometry(4.2, 4.2, 48, 48),
-    new THREE.ShaderMaterial({
-      side: THREE.DoubleSide, uniforms,
-      vertexShader: `
-        uniform float uTime; uniform vec2 uPush;
-        varying vec2 vUv; varying vec3 vView;
-        void main() {
-          vUv = uv; vec3 p = position;
-          float hang = 0.25 + 0.75 * (1.0 - uv.y);
-          float w = sin(p.x * 1.5 + uTime * 1.1) * 0.13
-                  + sin(p.y * 2.0 + p.x * 0.8 + uTime * 0.8) * 0.09
-                  + sin((p.x - p.y) * 3.4 - uTime * 1.5) * 0.03;
-          float d = distance(p.xy, uPush * 2.1);
-          p.z += w * hang + exp(-d * d * 1.2) * 0.28;
-          vec4 mv = modelViewMatrix * vec4(p, 1.0);
-          vView = mv.xyz;
-          gl_Position = projectionMatrix * mv;
-        }`,
-      fragmentShader: `
-        uniform sampler2D uMask; uniform float uTime;
-        varying vec2 vUv; varying vec3 vView;
-        void main() {
-          vec3 n = normalize(cross(dFdx(vView), dFdy(vView)));
-          float l = dot(n, normalize(vec3(0.35, 0.5, 1.0)));
-          vec2 q = vec2((vUv.x - 0.5) / 0.76 + 0.5, (vUv.y - 0.5) / (0.76 * 0.779) + 0.5);
-          float a = (q.x > 0.0 && q.x < 1.0 && q.y > 0.0 && q.y < 1.0) ? texture2D(uMask, q).a : 0.0;
-          float g = vUv.y + 0.12 * sin(vUv.x * 3.0 + uTime * 0.5);
-          vec3 base = mix(vec3(1.0, 0.62, 0.20), vec3(1.0, 0.86, 0.30), smoothstep(0.15, 0.9, g));
-          base = mix(vec3(0.07, 0.80, 0.72), base, smoothstep(-0.15, 0.35, g));
-          vec3 c = mix(base, vec3(0.09, 0.04, 0.24), a) * (0.66 + 0.42 * l);
-          gl_FragColor = vec4(c, 1.0);
-        }`,
-    })
-  );
-  scene.add(cloth);
-
-  const count = 110, pos = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    pos[i * 3] = (Math.random() - .5) * 26; pos[i * 3 + 1] = (Math.random() - .5) * 14; pos[i * 3 + 2] = -8 + Math.random() * 10;
-  }
-  const sg = new THREE.BufferGeometry();
-  sg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const stars = new THREE.Points(sg, new THREE.PointsMaterial({ map: new THREE.CanvasTexture(starSprite()), size: .36, transparent: true, opacity: .85, depthWrite: false, color: 0xfff1b8 }));
-  scene.add(stars);
-
-  function resize() {
-    const w = hero.clientWidth, h = hero.clientHeight, a = w / h;
-    renderer.setSize(w, h, false);
-    camera.aspect = a; camera.updateProjectionMatrix();
-    const d = Math.max(8.6, (4.2 * 1.3) / (2 * TAN * a)), vh = 2 * d * TAN, vw = vh * a;
-    if (w <= 860) camera.position.set(0, -vh * .2, d); else camera.position.set(-vw * .21, 0, d);
-  }
-  resize();
-  addEventListener('resize', resize);
-
-  const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
-  if (fine) hero.addEventListener('pointermove', e => {
-    const r = hero.getBoundingClientRect();
-    mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1; mouse.y = -(((e.clientY - r.top) / r.height) * 2 - 1);
-  });
-
-  // Render only while the hero is on screen and the tab is visible.
-  let visible = true, running = false, last = 0, time = 0;
-  function frame(now) {
-    if (!visible || document.hidden) { running = false; return; }
-    requestAnimationFrame(frame);
-    const dt = Math.min((now - last) / 1000 || 0, .05); last = now; time += dt;
-    mouse.sx += (mouse.x - mouse.sx) * .06; mouse.sy += (mouse.y - mouse.sy) * .06;
-    uniforms.uTime.value = time;
-    uniforms.uPush.value.set(mouse.sx, mouse.sy);
-    cloth.rotation.y = mouse.sx * .14; cloth.rotation.x = -mouse.sy * .06;
-    stars.position.y = Math.sin(time * .25) * .3;
-    renderer.render(scene, camera);
-  }
-  const start = () => { if (!running && visible && !document.hidden) { running = true; last = performance.now(); requestAnimationFrame(frame); } };
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; start(); }).observe(hero);
-  document.addEventListener('visibilitychange', start);
-  if (reduce) { renderer.render(scene, camera); visible = false; } else start();
-}
-
 /* ------------------------------------------------------------------ panels */
 const lock = () => {
-  const open = $$('.panel.open').length > 0 || $('#menu').classList.contains('open');
-  document.documentElement.classList.toggle('lock', open);
-  document.body.classList.toggle('panel-open', $$('.panel.open').length > 0);
+  const panels = $$('.panel.open').length > 0;
+  document.documentElement.classList.toggle('lock', panels || $$('#menu.open, .sheet.open').length > 0);
+  document.body.classList.toggle('panel-open', panels);
 };
-function setOpen(id, on) { const el = $(id); el.classList.toggle('open', on); el.setAttribute('aria-hidden', String(!on)); lock(); }
-const closeAll = () => ['#detail', '#cart', '#menu'].forEach(id => setOpen(id, false));
+function setOpen(id, on) { const e = $(id); e.classList.toggle('open', on); e.setAttribute('aria-hidden', String(!on)); lock(); }
+const closeAll = () => ['#detail', '#cart', '#wish', '#menu', '#checkout'].forEach(id => setOpen(id, false));
+const only = id => { ['#detail', '#cart', '#wish'].forEach(x => setOpen(x, x === id)); };
 
+function showImage(p, n) {
+  const list = p.images?.length ? p.images : [thumbs[p.id]];
+  const img = $('#d-img');
+  img.src = list[n]; img.alt = `${p.name} in ${p.tone}, view ${n + 1}`;
+  [...$('#d-thumbs').children].forEach((t, k) => t.classList.toggle('on', k === n));
+}
 function openDetail(i) {
   state.current = i; state.qty = 1; $('#q-val').textContent = 1;
   const p = PRODUCTS[i];
-  $('#d-img').src = thumbs[i]; $('#d-img').alt = `${p.name} in ${p.tone}`;
+  const tw = $('#d-thumbs'); tw.textContent = '';
+  if (p.images?.length > 1) p.images.forEach((src, n) => {
+    const b = el('button'); b.setAttribute('aria-label', `Show photo ${n + 1}`);
+    const im = el('img'); im.src = src; im.alt = ''; b.append(im);
+    b.addEventListener('click', () => showImage(p, n));
+    tw.append(b);
+  });
+  showImage(p, 0);
   $('#d-cat').textContent = p.cat;
   $('#d-name').textContent = p.name;
   $('#d-price').textContent = money(p.price);
   $('#d-desc').textContent = p.desc;
   $('#d-tone').textContent = p.tone;
   $('#detail .panel-body').scrollTop = 0;
-  setOpen('#detail', true);
+  syncWish();
+  only('#detail');
 }
 
-/* ------------------------------------------------------------------ bag */
-let bag = {};
-try { bag = JSON.parse(localStorage.getItem('forme-bag') || '{}') || {}; } catch { bag = {}; }
-const saveBag = () => { try { localStorage.setItem('forme-bag', JSON.stringify(bag)); } catch { /* private mode */ } };
+/* ------------------------------------------------------------------ item rows (cart, wishlist, summary) */
+function itemRow(p, sub, right, controls) {
+  const row = el('div', 'item');
+  const img = el('img'); img.src = thumbs[p.id]; img.alt = '';
+  const mid = el('div');
+  mid.append(el('h3', '', p.name), el('small', '', sub));
+  if (controls) mid.append(controls);
+  row.append(img, mid, right);
+  return row;
+}
+
+/* ------------------------------------------------------------------ cart */
+const cartLines = () => Object.keys(bag).filter(k => byId(k.split('|')[0])).map(k => { const [id, size] = k.split('|'); return { key: k, p: byId(id), size, qty: bag[k] }; });
 
 function renderBag() {
-  const keys = Object.keys(bag).filter(k => PRODUCTS.some(p => p.id === k.split('|')[0]));
-  let total = 0, count = 0;
-  const wrap = $('#cart-items');
+  const lines = cartLines(), wrap = $('#cart-items');
   wrap.textContent = '';
-  if (!keys.length) {
-    const e = document.createElement('p'); e.className = 'empty'; e.textContent = 'Your bag is empty. Pick something you love from the collection.';
-    wrap.append(e);
-  }
-  keys.forEach(key => {
-    const [id, size] = key.split('|');
-    const idx = PRODUCTS.findIndex(p => p.id === id), p = PRODUCTS[idx], q = bag[key];
-    total += p.price * q; count += q;
-    const row = document.createElement('div'); row.className = 'item';
-    row.innerHTML = `<img alt=""><div><h3></h3><small></small>
-      <div class="qty"><button data-d="-1" aria-label="Decrease quantity">−</button><span>${q}</span><button data-d="1" aria-label="Increase quantity">+</button></div></div>
-      <div class="item-side"><span>${money(p.price * q)}</span><button data-d="0">Remove</button></div>`;
-    row.querySelector('img').src = thumbs[idx] || '';
-    row.querySelector('h3').textContent = p.name;
-    row.querySelector('small').textContent = `${p.tone} · Size ${size}`;
-    row.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-      const d = +b.dataset.d;
-      if (d === 0 || bag[key] + d <= 0) delete bag[key]; else bag[key] += d;
-      saveBag(); renderBag();
-    }));
-    wrap.append(row);
+  if (!lines.length) wrap.append(el('p', 'empty', 'Your cart is empty. Pick something you love from the collection.'));
+  let total = 0, count = 0;
+  lines.forEach(({ key, p, size, qty }) => {
+    total += p.price * qty; count += qty;
+    const q = el('div', 'qty');
+    const minus = el('button', '', '−'), plus = el('button', '', '+');
+    minus.setAttribute('aria-label', 'Decrease quantity'); plus.setAttribute('aria-label', 'Increase quantity');
+    q.append(minus, el('span', '', qty), plus);
+    const side = el('div', 'item-side');
+    const rm = el('button', '', 'Remove');
+    side.append(el('span', '', money(p.price * qty)), rm);
+    const change = d => { if (d === 0 || bag[key] + d <= 0) delete bag[key]; else bag[key] = Math.min(9, bag[key] + d); save('forme-bag', bag); renderBag(); };
+    minus.addEventListener('click', () => change(-1)); plus.addEventListener('click', () => change(1)); rm.addEventListener('click', () => change(0));
+    wrap.append(itemRow(p, `${p.tone} · Size ${size}`, side, q));
   });
   $('#cart-total').textContent = money(total);
-  $('#cart-foot').hidden = !keys.length;
+  $('#cart-foot').hidden = !lines.length;
   $('#bag-count').textContent = count;
+}
+function addToCart(p, size, qty) {
+  const key = `${p.id}|${size}`;
+  bag[key] = Math.min(9, (bag[key] || 0) + qty);
+  save('forme-bag', bag); renderBag();
+  const c = $('#bag-count'); c.classList.add('bump'); setTimeout(() => c.classList.remove('bump'), 300);
+}
+
+/* ------------------------------------------------------------------ wishlist */
+function syncWish() {
+  $$('[data-wish]').forEach(b => {
+    const on = wish.includes(b.dataset.wish);
+    b.classList.toggle('on', on); b.textContent = on ? '♥' : '♡';
+    b.setAttribute('aria-label', on ? 'Remove from wishlist' : 'Add to wishlist');
+    b.setAttribute('aria-pressed', String(on));
+  });
+  const on = wish.includes(PRODUCTS[state.current].id);
+  $('#d-wish').textContent = on ? '♥ Saved to wishlist' : '♡ Add to wishlist';
+  $('#d-wish').classList.toggle('on', on);
+  $('#wish-count').textContent = wish.length;
+}
+function toggleWish(id) {
+  const on = wish.includes(id);
+  wish = on ? wish.filter(x => x !== id) : [...wish, id];
+  save('forme-wish', wish); syncWish(); renderWish();
+  toast(on ? 'Removed from your wishlist' : `${byId(id).name} saved to your wishlist`);
+}
+function renderWish() {
+  const wrap = $('#wish-items');
+  wrap.textContent = '';
+  if (!wish.length) wrap.append(el('p', 'empty', 'Nothing saved yet. Tap the heart on any piece to keep it here.'));
+  wish.forEach(id => {
+    const p = byId(id);
+    const side = el('div', 'item-side');
+    const rm = el('button', '', 'Remove');
+    rm.addEventListener('click', () => toggleWish(id));
+    side.append(el('span', '', money(p.price)), rm);
+    const view = el('button', 'mini', 'Choose size');
+    view.addEventListener('click', () => openDetail(PRODUCTS.indexOf(p)));
+    wrap.append(itemRow(p, `${p.cat} · ${p.tone}`, side, view));
+  });
+}
+
+/* ------------------------------------------------------------------ checkout (Cash on Delivery only) */
+function openCheckout(lines, fromCart) {
+  if (!lines.length) return;
+  state.checkout = lines; state.fromCart = fromCart;
+  const wrap = $('#co-items'); wrap.textContent = '';
+  let total = 0;
+  lines.forEach(({ p, size, qty }) => {
+    total += p.price * qty;
+    const side = el('div', 'item-side'); side.append(el('span', '', money(p.price * qty)));
+    wrap.append(itemRow(p, `${p.tone} · Size ${size} · Qty ${qty}`, side));
+  });
+  $('#co-total').textContent = $('#co-total-btn').textContent = money(total);
+  $('#co-err').textContent = '';
+  $('#co-main').hidden = false; $('#co-done').hidden = true;
+  ['#detail', '#cart', '#wish'].forEach(x => setOpen(x, false));
+  setOpen('#checkout', true);
+  $('#checkout').scrollTop = 0;
+}
+function placeOrder(e) {
+  e.preventDefault();
+  const v = id => $(id).value.trim();
+  const checks = [
+    ['#co-name', v('#co-name').length >= 2, 'Enter your full name.'],
+    ['#co-phone', /^[6-9]\d{9}$/.test(v('#co-phone').replace(/^(\+91|0)/, '').replace(/\s/g, '')), 'Enter a valid 10-digit mobile number.'],
+    ['#co-address', v('#co-address').length >= 6, 'Enter your full address.'],
+    ['#co-city', v('#co-city').length >= 2, 'Enter your city.'],
+    ['#co-state', v('#co-state').length >= 2, 'Enter your state.'],
+    ['#co-pin', /^[1-9]\d{5}$/.test(v('#co-pin')), 'Enter a valid 6-digit PIN code.'],
+  ];
+  const bad = checks.find(c => !c[1]);
+  if (bad) { $('#co-err').textContent = bad[2]; $(bad[0]).focus(); return; }
+  const total = state.checkout.reduce((s, l) => s + l.p.price * l.qty, 0);
+  const order = {
+    id: 'FM' + Date.now().toString(36).toUpperCase().slice(-7), date: new Date().toISOString(), payment: 'Cash on Delivery', total,
+    items: state.checkout.map(l => ({ id: l.p.id, name: l.p.name, size: l.size, qty: l.qty, price: l.p.price })),
+    customer: { name: v('#co-name'), phone: v('#co-phone'), address: v('#co-address'), city: v('#co-city'), state: v('#co-state'), pin: v('#co-pin') },
+  };
+  save('forme-orders', [...load('forme-orders', []), order]);
+  if (state.fromCart) { bag = {}; save('forme-bag', bag); renderBag(); }
+  $('#co-done-text').textContent = `Thank you, ${order.customer.name.split(' ')[0]}. Your order ${order.id} is confirmed. Please keep ${money(total)} ready in cash for delivery.`;
+  $('#co-main').hidden = true; $('#co-done').hidden = false;
+  $('#checkout').scrollTop = 0;
+}
+
+/* ------------------------------------------------------------------ feedback */
+function renderStars() {
+  const wrap = $('#fb-stars'); wrap.textContent = '';
+  for (let n = 1; n <= 5; n++) {
+    const b = el('button', n <= state.rating ? 'on' : '', '★');
+    b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(n === state.rating)); b.setAttribute('aria-label', `${n} star${n > 1 ? 's' : ''}`);
+    b.addEventListener('click', () => { state.rating = n; renderStars(); });
+    wrap.append(b);
+  }
+}
+function renderFeedback() {
+  const list = $('#fb-list'); list.textContent = '';
+  if (!feedback.length) {
+    $('#fb-avg').textContent = 'No feedback yet';
+    list.append(el('p', 'empty', 'Be the first to share what you think.'));
+    return;
+  }
+  const avg = feedback.reduce((s, f) => s + f.rating, 0) / feedback.length;
+  $('#fb-avg').textContent = `${avg.toFixed(1)} ★ from ${feedback.length} review${feedback.length > 1 ? 's' : ''}`;
+  [...feedback].reverse().forEach(f => {
+    const card = el('article', 'fb-card');
+    card.append(el('p', 'fb-stars', '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating)), el('p', 'fb-text', f.text),
+      el('p', 'fb-by', `${f.name}${f.product ? ' · ' + f.product : ''} · ${new Date(f.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`));
+    list.append(card);
+  });
 }
 
 let toastT;
 function toast(msg) {
-  const el = $('#toast'); el.textContent = msg; el.classList.add('show');
-  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2600);
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
 /* ------------------------------------------------------------------ UI */
@@ -221,7 +267,8 @@ function bindUI() {
   }));
   $$('[data-close]').forEach(b => b.addEventListener('click', () => setOpen('#' + b.parentElement.id, false)));
   $('#scrim').addEventListener('click', closeAll);
-  $('#bag-btn').addEventListener('click', () => { setOpen('#detail', false); setOpen('#cart', !$('#cart').classList.contains('open')); });
+  $('#bag-btn').addEventListener('click', () => ($('#cart').classList.contains('open') ? closeAll() : only('#cart')));
+  $('#wish-btn').addEventListener('click', () => ($('#wish').classList.contains('open') ? closeAll() : only('#wish')));
   $('#menu-btn').addEventListener('click', () => setOpen('#menu', true));
   addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
 
@@ -231,7 +278,7 @@ function bindUI() {
 
   const sizes = $('#d-sizes');
   SIZES.forEach(s => {
-    const b = document.createElement('button'); b.textContent = s; b.classList.toggle('on', s === state.size);
+    const b = el('button', s === state.size ? 'on' : '', s);
     b.addEventListener('click', () => { state.size = s; [...sizes.children].forEach(c => c.classList.toggle('on', c === b)); });
     sizes.append(b);
   });
@@ -239,14 +286,31 @@ function bindUI() {
   $('#q-minus').addEventListener('click', () => setQty(state.qty - 1));
   $('#q-plus').addEventListener('click', () => setQty(state.qty + 1));
   $('#add-btn').addEventListener('click', () => {
-    const p = PRODUCTS[state.current], key = `${p.id}|${state.size}`;
-    bag[key] = (bag[key] || 0) + state.qty;
-    saveBag(); renderBag();
-    const c = $('#bag-count'); c.classList.add('bump'); setTimeout(() => c.classList.remove('bump'), 300);
-    toast(`${p.name} added to your bag`);
-    setOpen('#detail', false); setOpen('#cart', true);
+    const p = PRODUCTS[state.current];
+    addToCart(p, state.size, state.qty);
+    toast(`${p.name} added to your cart`);
+    only('#cart');
   });
-  $('#checkout-btn').addEventListener('click', () => toast('Checkout is not connected yet. This is a preview.'));
+  $('#buy-btn').addEventListener('click', () => openCheckout([{ p: PRODUCTS[state.current], size: state.size, qty: state.qty }], false));
+  $('#d-wish').addEventListener('click', () => toggleWish(PRODUCTS[state.current].id));
+  $('#checkout-btn').addEventListener('click', () => openCheckout(cartLines(), true));
+  $('#co-form').addEventListener('submit', placeOrder);
+  $('#co-done-btn').addEventListener('click', () => { closeAll(); $('#co-form').reset(); });
+
+  const sel = $('#fb-product');
+  sel.append(new Option('The store in general', ''));
+  PRODUCTS.forEach(p => sel.append(new Option(p.name, p.name)));
+  renderStars();
+  $('#fb-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = $('#fb-name').value.trim(), text = $('#fb-text').value.trim();
+    if (!name) { toast('Add your name to send feedback.'); $('#fb-name').focus(); return; }
+    if (text.length < 5) { toast('Write a few words of feedback first.'); $('#fb-text').focus(); return; }
+    feedback.push({ name, text, product: sel.value, rating: state.rating, date: new Date().toISOString() });
+    save('forme-feedback', feedback); renderFeedback();
+    e.target.reset(); state.rating = 5; renderStars();
+    toast('Thank you for your feedback.');
+  });
   $('#news-form').addEventListener('submit', e => {
     e.preventDefault();
     const input = $('#news-email');
@@ -255,7 +319,7 @@ function bindUI() {
   });
 
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
-  $$('.rv').forEach(el => io.observe(el));
+  $$('.rv').forEach(x => io.observe(x));
 }
 
 /* ------------------------------------------------------------------ boot */
@@ -263,13 +327,12 @@ async function boot() {
   const fill = $('#loader-fill');
   fill.style.width = '35%';
   $('#p-count').textContent = PRODUCTS.length;
-  $$('.cur-150').forEach(e => (e.textContent = money(150)));
   await buildCards();
   renderGrid();
   fill.style.width = '75%';
   try { initHero(); } catch (err) { console.warn('WebGL unavailable', err); $('#gl').style.display = 'none'; }
   bindUI();
-  renderBag();
+  renderBag(); renderWish(); syncWish(); renderFeedback();
   fill.style.width = '100%';
   setTimeout(() => document.body.classList.add('ready'), 450);
 }
