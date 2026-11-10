@@ -1,6 +1,7 @@
 import { PRODUCTS, SIZES, CURRENCY } from './products.js';
 import { drawCard, drawPhotoCard } from './cards.js';
 import { initHero } from './hero.js';
+import { INDIA } from './india.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -240,15 +241,25 @@ function openCheckout(lines, fromCart) {
   setOpen('#checkout', true);
   $('#checkout').scrollTop = 0;
 }
+const OTHER = 'Other';
+function fillCities() {
+  const state = $('#co-state').value, city = $('#co-city');
+  city.textContent = '';
+  city.append(new Option(state ? 'Select city' : 'Select state first', ''));
+  if (state) { INDIA[state].forEach(c => city.append(new Option(c, c))); city.append(new Option('Other (type it below)', OTHER)); }
+  city.disabled = !state;
+  $('#co-city-other-wrap').hidden = true;
+}
 function placeOrder(e) {
   e.preventDefault();
   const v = id => $(id).value.trim();
   const checks = [
     ['#co-name', v('#co-name').length >= 2, 'Enter your full name.'],
-    ['#co-phone', /^[6-9]\d{9}$/.test(v('#co-phone').replace(/^(\+91|0)/, '').replace(/\s/g, '')), 'Enter a valid 10-digit mobile number.'],
+    ['#co-phone', /^[6-9]\d{9}$/.test(v('#co-phone')), 'Enter a valid 10-digit Indian mobile number.'],
     ['#co-address', v('#co-address').length >= 6, 'Enter your full address.'],
-    ['#co-city', v('#co-city').length >= 2, 'Enter your city.'],
-    ['#co-state', v('#co-state').length >= 2, 'Enter your state.'],
+    ['#co-state', !!v('#co-state'), 'Select your state.'],
+    ['#co-city', !!v('#co-city'), 'Select your city.'],
+    ['#co-city-other', v('#co-city') !== OTHER || v('#co-city-other').length >= 2, 'Enter the name of your city, town or village.'],
     ['#co-pin', /^[1-9]\d{5}$/.test(v('#co-pin')), 'Enter a valid 6-digit PIN code.'],
   ];
   const bad = checks.find(c => !c[1]);
@@ -257,7 +268,7 @@ function placeOrder(e) {
   const order = {
     id: 'FM' + Date.now().toString(36).toUpperCase().slice(-7), date: new Date().toISOString(), payment: 'Cash on Delivery', total,
     items: state.checkout.map(l => ({ id: l.p.id, name: l.p.name, size: l.size, qty: l.qty, price: l.p.price })),
-    customer: { name: v('#co-name'), phone: v('#co-phone'), address: v('#co-address'), city: v('#co-city'), state: v('#co-state'), pin: v('#co-pin') },
+    customer: { name: v('#co-name'), phone: '+91 ' + v('#co-phone'), address: v('#co-address'), city: v('#co-city') === OTHER ? v('#co-city-other') : v('#co-city'), state: v('#co-state'), pin: v('#co-pin') },
   };
   save('forme-orders', [...load('forme-orders', []), order]);
   if (state.fromCart) { bag = {}; save('forme-bag', bag); renderBag(); }
@@ -320,9 +331,9 @@ function submitTicket(e) {
   const v = id => $(id).value.trim(), err = (msg, id) => { $('#sp-err').textContent = msg; $(id)?.focus(); };
   if (!state.ticketType) return err('Choose what your query is about.');
   if (v('#sp-name').length < 2) return err('Enter your name.', '#sp-name');
-  if (!/^[6-9]\d{9}$/.test(v('#sp-phone').replace(/^(\+91|0)/, '').replace(/\s/g, ''))) return err('Enter a valid 10-digit mobile number.', '#sp-phone');
+  if (!/^[6-9]\d{9}$/.test(v('#sp-phone'))) return err('Enter a valid 10-digit Indian mobile number.', '#sp-phone');
   if (v('#sp-text').length < 10) return err('Describe your query in a few words.', '#sp-text');
-  const t = { id: 'TKT' + Date.now().toString(36).toUpperCase().slice(-6), type: state.ticketType, name: v('#sp-name'), phone: v('#sp-phone'), order: v('#sp-order'), text: v('#sp-text'), date: new Date().toISOString() };
+  const t = { id: 'TKT' + Date.now().toString(36).toUpperCase().slice(-6), type: state.ticketType, name: v('#sp-name'), phone: '+91 ' + v('#sp-phone'), order: v('#sp-order'), text: v('#sp-text'), date: new Date().toISOString() };
   tickets.push(t); save('forme-tickets', tickets);
   e.target.reset(); state.ticketType = ''; $('#sp-err').textContent = '';
   renderTypes(); renderTickets();
@@ -376,7 +387,11 @@ function bindUI() {
   $('#d-wish').addEventListener('click', () => toggleWish(PRODUCTS[state.current].id));
   $('#checkout-btn').addEventListener('click', () => openCheckout(cartLines(), true));
   $('#co-form').addEventListener('submit', placeOrder);
-  $('#co-done-btn').addEventListener('click', () => { closeAll(); $('#co-form').reset(); });
+  Object.keys(INDIA).forEach(st => $('#co-state').append(new Option(st, st)));
+  $('#co-state').addEventListener('change', fillCities);
+  $('#co-city').addEventListener('change', () => { $('#co-city-other-wrap').hidden = $('#co-city').value !== OTHER; });
+  $$('.tel-in, .num-in').forEach(i => i.addEventListener('input', () => { i.value = i.value.replace(/\D/g, '').slice(0, i.maxLength); }));
+  $('#co-done-btn').addEventListener('click', () => { closeAll(); $('#co-form').reset(); fillCities(); });
 
   const sel = $('#fb-product');
   sel.append(new Option('The store in general', ''));
