@@ -46,7 +46,7 @@ export function initHero() {
           float g = vUv.y + 0.12 * sin(vUv.x * 3.0 + uTime * 0.5);
           vec3 base = mix(vec3(1.0, 0.62, 0.20), vec3(1.0, 0.86, 0.30), smoothstep(0.15, 0.9, g));
           base = mix(vec3(0.07, 0.80, 0.72), base, smoothstep(-0.15, 0.35, g));
-          vec3 c = mix(base, vec3(0.09, 0.04, 0.24), a) * (0.66 + 0.42 * l);
+          vec3 c = mix(base, vec3(0.06, 0.16, 0.24), a) * (0.66 + 0.42 * l);
           gl_FragColor = vec4(c, 1.0);
         }`,
     })

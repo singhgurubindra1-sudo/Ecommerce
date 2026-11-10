@@ -73,7 +73,7 @@ export function drawCard(p, index) {
   g.addColorStop(0, p.bg[0]); g.addColorStop(1, p.bg[1]);
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   const light = lum(p.bg[0]) > .6;
-  const ink = light ? '#170b3d' : '#fff6ec';
+  const ink = light ? '#0f2a3d' : '#fff6ec';
 
   // soft diagonal light, echoing the logo backdrop
   ctx.save();
