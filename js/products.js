@@ -6,10 +6,10 @@
 export const CURRENCY = '₹';
 
 export const PRODUCTS = [
-  { id: 'sunehri-lehenga', name: 'Sunehri Lehenga Set', cat: 'Lehenga Sets', price: 4999, tone: 'Marigold Yellow', badge: 'New',
+  { id: 'sunehri-lehenga', name: 'Sunehri Lehenga Set', cat: 'Lehenga Sets', price: 4999, tone: 'Marigold Yellow',
     images: ['assets/products/sunehri-1.webp', 'assets/products/sunehri-2.webp', 'assets/products/sunehri-3.webp', 'assets/products/sunehri-4.webp', 'assets/products/sunehri-5.webp'],
     desc: 'A marigold two-piece made for haldi mornings. The cropped blouse is hand-embellished with pearls, mirror work and leaf embroidery, finished with a tassel hem and a lace-up back. The high-waisted skirt falls in deep, flowing pleats with a tasselled drawstring.' },
-  { id: 'gulbahar-coord', name: 'Gulbahar Co-ord Set', cat: 'Co-ord Sets', price: 5499, tone: 'Ivory & Crimson', badge: 'New',
+  { id: 'gulbahar-coord', name: 'Gulbahar Co-ord Set', cat: 'Co-ord Sets', price: 5499, tone: 'Ivory & Crimson',
     images: ['assets/products/gulbahar-1.webp', 'assets/products/gulbahar-2.webp', 'assets/products/gulbahar-3.png', 'assets/products/gulbahar-4.png', 'assets/products/gulbahar-5.png'],
     desc: 'An ivory corset-style kurta with a sweetheart neckline, crimson piping and a lace-up back, worn over fitted flared trousers with crimson godet panels. Sheer bell sleeves and hems carry hand-embroidered crimson flowers with gold leaves, pearls and bead drops.' },
   { id: 'atelier-coat', name: 'The Atelier Coat', type: 'coat', cat: 'Outerwear', price: 6999, color: '#ffd23f', tone: 'Sunflower', bg: ['#ff5fa2', '#f02f7c'],
