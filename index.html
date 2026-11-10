@@ -120,38 +120,44 @@
       <p class="copy">© 2026 FOR ME Studios. All rights reserved.</p>
     </div>
   </section>
+  <section id="product" class="pdp" hidden>
+    <div class="wrap">
+      <button class="back" id="back-btn">← Back to collection</button>
+      <div class="d-grid">
+        <div class="d-gallery">
+          <img id="d-img" class="d-img" alt="">
+          <div class="d-thumbs" id="d-thumbs"></div>
+        </div>
+        <div class="d-info">
+          <p class="eyebrow" id="d-cat"></p>
+          <h1 class="d-name" id="d-name"></h1>
+          <p class="d-price" id="d-price"></p>
+          <p class="d-desc" id="d-desc"></p>
+          <p class="d-label">Colour <span id="d-tone"></span></p>
+          <p class="d-label">Size</p>
+          <div class="sizes" id="d-sizes"></div>
+          <div class="buy">
+            <div class="qty"><button id="q-minus" aria-label="Decrease quantity">−</button><span id="q-val">1</span><button id="q-plus" aria-label="Increase quantity">+</button></div>
+            <button class="btn" id="add-btn">Add to cart</button>
+          </div>
+          <button class="btn solid" id="buy-btn">Buy now</button>
+          <button class="wish-toggle" id="d-wish"></button>
+          <ul class="d-notes">
+            <li>Cash on Delivery available</li>
+            <li>Returns within 14 days</li>
+          </ul>
+          <div id="pd-more" class="pd-more"></div>
+        </div>
+      </div>
+      <div class="pd-related">
+        <h2 class="display sm">You may <em>also like.</em></h2>
+        <div class="grid" id="related"></div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <div id="scrim"></div>
-
-<aside id="detail" class="panel wide" aria-hidden="true" aria-label="Product details">
-  <button class="close" data-close aria-label="Close">×</button>
-  <div class="panel-body d-grid">
-    <div class="d-gallery">
-      <img id="d-img" class="d-img" alt="">
-      <div class="d-thumbs" id="d-thumbs"></div>
-    </div>
-    <div class="d-info">
-      <p class="eyebrow" id="d-cat"></p>
-      <h2 class="d-name" id="d-name"></h2>
-      <p class="d-price" id="d-price"></p>
-      <p class="d-desc" id="d-desc"></p>
-      <p class="d-label">Colour <span id="d-tone"></span></p>
-      <p class="d-label">Size</p>
-      <div class="sizes" id="d-sizes"></div>
-      <div class="buy">
-        <div class="qty"><button id="q-minus" aria-label="Decrease quantity">−</button><span id="q-val">1</span><button id="q-plus" aria-label="Increase quantity">+</button></div>
-        <button class="btn" id="add-btn">Add to cart</button>
-      </div>
-      <button class="btn solid" id="buy-btn">Buy now</button>
-      <button class="wish-toggle" id="d-wish"></button>
-      <ul class="d-notes">
-        <li>Cash on Delivery available</li>
-        <li>Returns within 14 days</li>
-      </ul>
-    </div>
-  </div>
-</aside>
 
 <aside id="cart" class="panel" aria-hidden="true" aria-label="Your cart">
   <button class="close" data-close aria-label="Close">×</button>

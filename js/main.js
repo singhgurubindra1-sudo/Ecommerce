@@ -36,35 +36,63 @@ async function buildCards() {
 }
 
 /* ------------------------------------------------------------------ grid */
-function renderGrid() {
-  const grid = $('#grid');
-  PRODUCTS.forEach((p, i) => {
-    const card = el('article', 'card rv');
-    card.style.transitionDelay = `${(i % 4) * 70}ms`;
-    const pic = el('button', 'card-pic');
-    pic.setAttribute('aria-label', `View ${p.name}`);
-    const img = el('img');
-    img.src = thumbs[p.id]; img.alt = `${p.name} in ${p.tone}`; img.loading = 'lazy';
-    pic.append(img);
-    const heart = el('button', 'heart');
-    heart.dataset.wish = p.id;
-    heart.addEventListener('click', () => toggleWish(p.id));
-    const meta = el('p', '', p.cat);
-    meta.append(el('b', '', money(p.price)));
-    card.append(pic, heart);
-    if (p.badge) card.append(el('span', 'badge', p.badge));
-    card.append(el('h3', '', p.name), meta);
-    pic.addEventListener('click', () => openDetail(i));
-    if (fine && !reduce) {
-      pic.addEventListener('pointermove', e => {
-        const r = pic.getBoundingClientRect();
-        pic.style.setProperty('--ry', `${((e.clientX - r.left) / r.width - .5) * 14}deg`);
-        pic.style.setProperty('--rx', `${-((e.clientY - r.top) / r.height - .5) * 10}deg`);
-      });
-      pic.addEventListener('pointerleave', () => { pic.style.setProperty('--ry', '0deg'); pic.style.setProperty('--rx', '0deg'); });
-    }
-    grid.append(card);
-  });
+function makeCard(p, reveal, n = 0) {
+  const card = el('article', reveal ? 'card rv' : 'card');
+  if (reveal) card.style.transitionDelay = `${(n % 4) * 70}ms`;
+  const pic = el('button', 'card-pic');
+  pic.setAttribute('aria-label', `View ${p.name}`);
+  const img = el('img');
+  img.src = thumbs[p.id]; img.alt = `${p.name} in ${p.tone}`; img.loading = 'lazy';
+  pic.append(img);
+  const heart = el('button', 'heart');
+  heart.dataset.wish = p.id;
+  heart.addEventListener('click', () => toggleWish(p.id));
+  const meta = el('p', '', p.cat);
+  meta.append(el('b', '', money(p.price)));
+  card.append(pic, heart);
+  if (p.badge) card.append(el('span', 'badge', p.badge));
+  card.append(el('h3', '', p.name), meta);
+  pic.addEventListener('click', () => go(p.id));
+  if (fine && !reduce) {
+    pic.addEventListener('pointermove', e => {
+      const r = pic.getBoundingClientRect();
+      pic.style.setProperty('--ry', `${((e.clientX - r.left) / r.width - .5) * 14}deg`);
+      pic.style.setProperty('--rx', `${-((e.clientY - r.top) / r.height - .5) * 10}deg`);
+    });
+    pic.addEventListener('pointerleave', () => { pic.style.setProperty('--ry', '0deg'); pic.style.setProperty('--rx', '0deg'); });
+  }
+  return card;
+}
+function renderGrid() { PRODUCTS.forEach((p, i) => $('#grid').append(makeCard(p, true, i))); }
+
+/* ------------------------------------------------------------------ routing: each product has its own page at #product-id */
+let onProduct = false, savedScroll = 0, navClick = false, cameFromSite = false;
+function go(hash) {
+  navClick = true;
+  if (location.hash.slice(1) === hash) route(); else location.hash = hash;
+}
+function route() {
+  const hash = decodeURIComponent(location.hash.slice(1));
+  const p = byId(hash);
+  const was = onProduct, clicked = navClick;
+  navClick = false;
+  ['#cart', '#wish', '#menu', '#checkout'].forEach(id => setOpen(id, false));
+  if (p) {
+    if (!was) { savedScroll = scrollY; cameFromSite = clicked; }
+    onProduct = true;
+    $$('main > *').forEach(s => (s.hidden = s.id !== 'product'));
+    document.body.classList.add('on-product');
+    fillProduct(p);
+    scrollTo({ top: 0, behavior: 'instant' });
+    return;
+  }
+  onProduct = false;
+  $$('main > *').forEach(s => (s.hidden = s.id === 'product'));
+  document.body.classList.remove('on-product');
+  const sec = hash && document.getElementById(hash);
+  if (clicked && sec) sec.scrollIntoView({ behavior: was || reduce ? 'instant' : 'smooth' });
+  else if (was) scrollTo({ top: savedScroll, behavior: 'instant' });
+  else if (sec && sec.closest('main')) sec.scrollIntoView({ behavior: 'instant' });
 }
 
 /* ------------------------------------------------------------------ panels */
@@ -74,8 +102,8 @@ const lock = () => {
   document.body.classList.toggle('panel-open', panels);
 };
 function setOpen(id, on) { const e = $(id); e.classList.toggle('open', on); e.setAttribute('aria-hidden', String(!on)); lock(); }
-const closeAll = () => ['#detail', '#cart', '#wish', '#menu', '#checkout'].forEach(id => setOpen(id, false));
-const only = id => { ['#detail', '#cart', '#wish'].forEach(x => setOpen(x, x === id)); };
+const closeAll = () => ['#cart', '#wish', '#menu', '#checkout'].forEach(id => setOpen(id, false));
+const only = id => { ['#cart', '#wish'].forEach(x => setOpen(x, x === id)); };
 
 function showImage(p, n) {
   const list = p.images?.length ? p.images : [thumbs[p.id]];
@@ -83,9 +111,8 @@ function showImage(p, n) {
   img.src = list[n]; img.alt = `${p.name} in ${p.tone}, view ${n + 1}`;
   [...$('#d-thumbs').children].forEach((t, k) => t.classList.toggle('on', k === n));
 }
-function openDetail(i) {
-  state.current = i; state.qty = 1; $('#q-val').textContent = 1;
-  const p = PRODUCTS[i];
+function fillProduct(p) {
+  state.current = PRODUCTS.indexOf(p); state.qty = 1; $('#q-val').textContent = 1;
   const tw = $('#d-thumbs'); tw.textContent = '';
   if (p.images?.length > 1) p.images.forEach((src, n) => {
     const b = el('button'); b.setAttribute('aria-label', `Show photo ${n + 1}`);
@@ -99,9 +126,22 @@ function openDetail(i) {
   $('#d-price').textContent = money(p.price);
   $('#d-desc').textContent = p.desc;
   $('#d-tone').textContent = p.tone;
-  $('#detail .panel-body').scrollTop = 0;
+  document.title = `${p.name} · FOR ME Studios`;
+
+  const more = $('#pd-more'); more.textContent = '';
+  if (p.story?.length) { more.append(el('h2', 'pd-h', 'About this piece')); p.story.forEach(t => more.append(el('p', 'pd-p', t))); }
+  if (p.details?.length) {
+    more.append(el('h2', 'pd-h', 'Design details'));
+    const ul = el('ul', 'pd-list'); p.details.forEach(t => ul.append(el('li', '', t))); more.append(ul);
+  }
+  if (p.fabric?.length) {
+    more.append(el('h2', 'pd-h', 'Fabric'));
+    const dl = el('dl', 'pd-fab'); p.fabric.forEach(([k, v]) => dl.append(el('dt', '', k), el('dd', '', v))); more.append(dl);
+  }
+
+  const rel = $('#related'); rel.textContent = '';
+  PRODUCTS.filter(x => x !== p).slice(0, 4).forEach(x => rel.append(makeCard(x, false)));
   syncWish();
-  only('#detail');
 }
 
 /* ------------------------------------------------------------------ item rows (cart, wishlist, summary) */
@@ -177,7 +217,7 @@ function renderWish() {
     rm.addEventListener('click', () => toggleWish(id));
     side.append(el('span', '', money(p.price)), rm);
     const view = el('button', 'mini', 'Choose size');
-    view.addEventListener('click', () => openDetail(PRODUCTS.indexOf(p)));
+    view.addEventListener('click', () => go(p.id));
     wrap.append(itemRow(p, `${p.cat} · ${p.tone}`, side, view));
   });
 }
@@ -196,7 +236,7 @@ function openCheckout(lines, fromCart) {
   $('#co-total').textContent = $('#co-total-btn').textContent = money(total);
   $('#co-err').textContent = '';
   $('#co-main').hidden = false; $('#co-done').hidden = true;
-  ['#detail', '#cart', '#wish'].forEach(x => setOpen(x, false));
+  ['#cart', '#wish'].forEach(x => setOpen(x, false));
   setOpen('#checkout', true);
   $('#checkout').scrollTop = 0;
 }
@@ -261,10 +301,9 @@ function toast(msg) {
 
 /* ------------------------------------------------------------------ UI */
 function bindUI() {
-  $$('[data-go]').forEach(b => b.addEventListener('click', () => {
-    closeAll();
-    document.getElementById(b.dataset.go)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
-  }));
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => { closeAll(); go(b.dataset.go); }));
+  $('#back-btn').addEventListener('click', () => (cameFromSite ? history.back() : go('collection')));
+  addEventListener('hashchange', route);
   $$('[data-close]').forEach(b => b.addEventListener('click', () => setOpen('#' + b.parentElement.id, false)));
   $('#scrim').addEventListener('click', closeAll);
   $('#bag-btn').addEventListener('click', () => ($('#cart').classList.contains('open') ? closeAll() : only('#cart')));
@@ -274,6 +313,8 @@ function bindUI() {
 
   const nav = $('#nav');
   const onScroll = () => nav.classList.toggle('scrolled', scrollY > 30);
+  const baseTitle = document.title;
+  addEventListener('hashchange', () => { if (!byId(decodeURIComponent(location.hash.slice(1)))) document.title = baseTitle; });
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
   const sizes = $('#d-sizes');
@@ -333,6 +374,7 @@ async function boot() {
   try { initHero(); } catch (err) { console.warn('WebGL unavailable', err); $('#gl').style.display = 'none'; }
   bindUI();
   renderBag(); renderWish(); syncWish(); renderFeedback();
+  route();
   fill.style.width = '100%';
   setTimeout(() => document.body.classList.add('ready'), 450);
 }
