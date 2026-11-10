@@ -9,7 +9,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const byId = id => PRODUCTS.find(p => p.id === id);
 
-const state = { current: 0, size: 'M', qty: 1, checkout: [], fromCart: false, rating: 5 };
+const state = { current: 0, size: 'M', qty: 1, checkout: [], fromCart: false, rating: 5, ticketType: '' };
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
@@ -76,7 +76,7 @@ function route() {
   const p = byId(hash);
   const was = onProduct, clicked = navClick;
   navClick = false;
-  ['#cart', '#wish', '#menu', '#checkout'].forEach(id => setOpen(id, false));
+  ['#cart', '#wish', '#support', '#menu', '#checkout'].forEach(id => setOpen(id, false));
   if (p) {
     if (!was) { savedScroll = scrollY; cameFromSite = clicked; }
     onProduct = true;
@@ -102,8 +102,8 @@ const lock = () => {
   document.body.classList.toggle('panel-open', panels);
 };
 function setOpen(id, on) { const e = $(id); e.classList.toggle('open', on); e.setAttribute('aria-hidden', String(!on)); lock(); }
-const closeAll = () => ['#cart', '#wish', '#menu', '#checkout'].forEach(id => setOpen(id, false));
-const only = id => { ['#cart', '#wish'].forEach(x => setOpen(x, x === id)); };
+const closeAll = () => ['#cart', '#wish', '#support', '#menu', '#checkout'].forEach(id => setOpen(id, false));
+const only = id => { ['#cart', '#wish', '#support'].forEach(x => setOpen(x, x === id)); };
 
 function showImage(p, n) {
   const list = p.images?.length ? p.images : [thumbs[p.id]];
@@ -236,7 +236,7 @@ function openCheckout(lines, fromCart) {
   $('#co-total').textContent = $('#co-total-btn').textContent = money(total);
   $('#co-err').textContent = '';
   $('#co-main').hidden = false; $('#co-done').hidden = true;
-  ['#cart', '#wish'].forEach(x => setOpen(x, false));
+  ['#cart', '#wish', '#support'].forEach(x => setOpen(x, false));
   setOpen('#checkout', true);
   $('#checkout').scrollTop = 0;
 }
@@ -293,6 +293,43 @@ function renderFeedback() {
   });
 }
 
+/* ------------------------------------------------------------------ support tickets */
+const TICKET_TYPES = ['Shipping issue', 'Order issue', 'Other issue'];
+let tickets = load('forme-tickets', []);
+function renderTypes() {
+  const wrap = $('#sp-types'); wrap.textContent = '';
+  TICKET_TYPES.forEach(t => {
+    const b = el('button', t === state.ticketType ? 'on' : '', t);
+    b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(t === state.ticketType));
+    b.addEventListener('click', () => { state.ticketType = t; renderTypes(); });
+    wrap.append(b);
+  });
+}
+function renderTickets() {
+  const list = $('#sp-list'); list.textContent = '';
+  $('#sp-list-h').hidden = !tickets.length;
+  [...tickets].reverse().forEach(t => {
+    const card = el('article', 'sp-card');
+    const top = el('p', 'sp-top'); top.append(el('b', '', t.id), el('span', 'sp-status', 'Open'));
+    card.append(top, el('p', 'fb-by', `${t.type}${t.order ? ' · Order ' + t.order : ''} · ${new Date(t.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`), el('p', 'fb-text', t.text));
+    list.append(card);
+  });
+}
+function submitTicket(e) {
+  e.preventDefault();
+  const v = id => $(id).value.trim(), err = (msg, id) => { $('#sp-err').textContent = msg; $(id)?.focus(); };
+  if (!state.ticketType) return err('Choose what your query is about.');
+  if (v('#sp-name').length < 2) return err('Enter your name.', '#sp-name');
+  if (!/^[6-9]\d{9}$/.test(v('#sp-phone').replace(/^(\+91|0)/, '').replace(/\s/g, ''))) return err('Enter a valid 10-digit mobile number.', '#sp-phone');
+  if (v('#sp-text').length < 10) return err('Describe your query in a few words.', '#sp-text');
+  const t = { id: 'TKT' + Date.now().toString(36).toUpperCase().slice(-6), type: state.ticketType, name: v('#sp-name'), phone: v('#sp-phone'), order: v('#sp-order'), text: v('#sp-text'), date: new Date().toISOString() };
+  tickets.push(t); save('forme-tickets', tickets);
+  e.target.reset(); state.ticketType = ''; $('#sp-err').textContent = '';
+  renderTypes(); renderTickets();
+  toast(`Ticket ${t.id} created`);
+  $('#sp-list-h').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 let toastT;
 function toast(msg) {
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
@@ -309,6 +346,9 @@ function bindUI() {
   $('#bag-btn').addEventListener('click', () => ($('#cart').classList.contains('open') ? closeAll() : only('#cart')));
   $('#wish-btn').addEventListener('click', () => ($('#wish').classList.contains('open') ? closeAll() : only('#wish')));
   $('#menu-btn').addEventListener('click', () => setOpen('#menu', true));
+  $('#support-btn').addEventListener('click', () => { $('#sp-err').textContent = ''; only('#support'); });
+  $('#sp-form').addEventListener('submit', submitTicket);
+  renderTypes(); renderTickets();
   addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
 
   const nav = $('#nav');

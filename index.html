@@ -115,9 +115,8 @@
         </form>
       </div>
       <div class="foot rv">
-        <div><b>Shop</b><button data-go="collection">Collection</button><button data-go="studio">Our Story</button></div>
-        <div><b>Help</b><span>Shipping</span><span>Returns</span><span>Size guide</span></div>
-        <div><b>Follow</b><span>Instagram</span><span>Pinterest</span><span>TikTok</span></div>
+        <div><b>Shop</b><button data-go="collection">Collection</button><button data-go="studio">Our Story</button><button data-go="feedback">Feedback</button></div>
+        <div><b>Help</b><span>Need help with an order?</span><button class="mini" id="support-btn">Raise a support ticket</button></div>
       </div>
       <p class="copy">© 2026 FOR ME Studios. All rights reserved.</p>
     </div>
@@ -179,6 +178,27 @@
   <div class="panel-body">
     <h2 class="d-name">Your wishlist</h2>
     <div id="wish-items" class="items"></div>
+  </div>
+</aside>
+
+<aside id="support" class="panel" aria-hidden="true" aria-label="Support">
+  <button class="close" data-close aria-label="Close">×</button>
+  <div class="panel-body">
+    <h2 class="d-name">Support</h2>
+    <p class="d-desc">Tell us what went wrong and we will get back to you on your mobile number.</p>
+    <form id="sp-form" class="form" novalidate>
+      <div class="field"><span class="lab" id="sp-type-lab">What is it about?</span>
+        <div class="sp-types" id="sp-types" role="radiogroup" aria-labelledby="sp-type-lab"></div>
+      </div>
+      <div class="field"><label for="sp-name">Your name</label><input id="sp-name" type="text" autocomplete="name" maxlength="50"></div>
+      <div class="field"><label for="sp-phone">Mobile number</label><input id="sp-phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="10-digit number"></div>
+      <div class="field"><label for="sp-order">Order number (if you have one)</label><input id="sp-order" type="text" maxlength="20" placeholder="For example FMAB12CD3"></div>
+      <div class="field"><label for="sp-text">Your query</label><textarea id="sp-text" rows="4" maxlength="600"></textarea></div>
+      <p id="sp-err" class="co-err" role="alert"></p>
+      <button class="btn solid" type="submit">Create ticket</button>
+    </form>
+    <h3 class="co-h" id="sp-list-h">Your tickets</h3>
+    <div id="sp-list" class="sp-list"></div>
   </div>
 </aside>
 

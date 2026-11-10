@@ -26,4 +26,4 @@ Everything lives in `js/products.js`: name, category, price, colour and descript
 - `js/vendor/` – three.js r170 (MIT)
 - `assets/` – logo files
 
-Prices are in INR. The cart, wishlist, feedback and placed orders are saved only in the visitor's own browser (localStorage). Nothing is sent to a server yet, so orders do not reach the shop until a backend is connected.
+Prices are in INR. The cart, wishlist, feedback, support tickets and placed orders are saved only in the visitor's own browser (localStorage). Nothing is sent to a server yet, so orders do not reach the shop until a backend is connected.
