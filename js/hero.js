@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.min.js';
 import { starSprite } from './cards.js';
+import { PRODUCTS } from './products.js';
 
 const $ = s => document.querySelector(s);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -62,12 +63,34 @@ export function initHero() {
   const stars = new THREE.Points(sg, new THREE.PointsMaterial({ map: new THREE.CanvasTexture(starSprite()), size: .36, transparent: true, opacity: .85, depthWrite: false, color: 0xfff1b8 }));
   scene.add(stars);
 
+  // Product photos floating around the cloth (desktop only)
+  const photos = new THREE.Group();
+  scene.add(photos);
+  const PW = 1.32, PH = 1.76, spots = [[-2.85, 1.1, -1.3, .09], [-2.5, -1.5, -.3, -.1], [2.5, -1.35, .7, -.07]];
+  const loader = new THREE.TextureLoader();
+  PRODUCTS.filter(p => p.images?.length).slice(0, 3).forEach((p, i) => {
+    const [x, y, z, r] = spots[i];
+    const g = new THREE.Group();
+    g.position.set(x, y, z); g.rotation.z = r; g.userData = { x, y, r, i };
+    g.add(new THREE.Mesh(new THREE.PlaneGeometry(PW + .14, PH + .14), new THREE.MeshBasicMaterial({ color: 0xfff6ec })));
+    const tex = loader.load(p.images[0], t => {
+      const a = t.image.width / t.image.height, want = PW / PH;
+      if (a < want) { t.repeat.set(1, a / want); t.offset.set(0, 1 - a / want); } else { t.repeat.set(want / a, 1); t.offset.set((1 - want / a) / 2, 0); }
+    });
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), new THREE.MeshBasicMaterial({ map: tex }));
+    pic.position.z = .01;
+    g.add(pic);
+    photos.add(g);
+  });
+
   function resize() {
     const w = hero.clientWidth, h = hero.clientHeight, a = w / h;
     renderer.setSize(w, h, false);
     camera.aspect = a; camera.updateProjectionMatrix();
     const d = Math.max(8.6, (4.2 * 1.3) / (2 * TAN * a)), vh = 2 * d * TAN, vw = vh * a;
     if (w <= 860) camera.position.set(0, -vh * .2, d); else camera.position.set(-vw * .21, 0, d);
+    photos.visible = w > 1000;
   }
   resize();
   addEventListener('resize', resize);
@@ -89,6 +112,13 @@ export function initHero() {
     uniforms.uPush.value.set(mouse.sx, mouse.sy);
     cloth.rotation.y = mouse.sx * .14; cloth.rotation.x = -mouse.sy * .06;
     stars.position.y = Math.sin(time * .25) * .3;
+    for (const g of photos.children) {
+      const u = g.userData;
+      g.position.x = u.x + mouse.sx * (.18 + u.i * .08);
+      g.position.y = u.y + Math.sin(time * .7 + u.i * 2.1) * .09 + mouse.sy * .1;
+      g.rotation.z = u.r + Math.sin(time * .5 + u.i) * .025;
+      g.rotation.y = mouse.sx * .25;
+    }
     renderer.render(scene, camera);
   }
   const start = () => { if (!running && visible && !document.hidden) { running = true; last = performance.now(); requestAnimationFrame(frame); } };
