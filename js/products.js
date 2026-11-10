@@ -71,6 +71,9 @@ export const PRODUCTS = [
       'Full-length fitted sleeves',
       'Cropped length with soft gathering at the waist',
       'Close, body-skimming fit',
+    ],
+    fabric: [
+      ['Main body', 'Premium nylon-spandex jersey, 220–240 GSM'],
     ] },
   { id: 'atelier-coat', name: 'The Atelier Coat', type: 'coat', cat: 'Outerwear', price: 6999, color: '#ffd23f', tone: 'Sunflower', bg: ['#ff5fa2', '#f02f7c'],
     desc: 'A long, double-faced wool coat with a soft shoulder and a clean lapel. Cut roomy enough for a knit underneath.' },
