@@ -1,6 +1,6 @@
 # FOR ME Studios
 
-A 3D storefront for the FOR ME Studios clothing brand. The page never scrolls: the wheel, a swipe or the arrow keys fly a camera through four scenes (home, a turning carousel of pieces, the studio story, contact).
+A 3D storefront for the FOR ME Studios clothing brand. A colourful, normally scrolling page: a 3D logo cloth in the hero, a centred product grid, the studio story and contact.
 
 ## Run it
 
@@ -20,7 +20,7 @@ Everything lives in `js/products.js`: name, category, price, colour and descript
 
 - `index.html` – markup for the scenes, bag, product panel and menu
 - `css/style.css` – all styling
-- `js/main.js` – 3D scene (three.js), navigation, bag
+- `js/main.js` – hero 3D cloth (three.js), product grid, bag
 - `js/cards.js` – draws the placeholder product cards
 - `js/vendor/` – three.js r170 (MIT)
 - `assets/` – logo files

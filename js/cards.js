@@ -73,11 +73,11 @@ export function drawCard(p, index) {
   g.addColorStop(0, p.bg[0]); g.addColorStop(1, p.bg[1]);
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   const light = lum(p.bg[0]) > .6;
-  const ink = light ? '#3a200f' : '#f3e8da';
+  const ink = light ? '#170b3d' : '#fff6ec';
 
   // soft diagonal light, echoing the logo backdrop
   ctx.save();
-  ctx.globalAlpha = light ? .35 : .12;
+  ctx.globalAlpha = .16;
   const d = ctx.createLinearGradient(0, 0, W, H * .7);
   d.addColorStop(0, 'rgba(255,255,255,0)'); d.addColorStop(.45, 'rgba(255,255,255,.9)'); d.addColorStop(.62, 'rgba(255,255,255,0)');
   ctx.fillStyle = d; ctx.fillRect(0, 0, W, H);
@@ -90,7 +90,7 @@ export function drawCard(p, index) {
   ctx.save();
   ctx.translate(ox, oy); ctx.scale(k, k);
   ctx.save();
-  ctx.shadowColor = 'rgba(30,14,4,.34)'; ctx.shadowBlur = 46; ctx.shadowOffsetY = 26; ctx.shadowOffsetX = 8;
+  ctx.shadowColor = 'rgba(15,5,45,.38)'; ctx.shadowBlur = 46; ctx.shadowOffsetY = 26; ctx.shadowOffsetX = 8;
   const fg = ctx.createLinearGradient(8, 0, 92, 0);
   fg.addColorStop(0, mix(p.color, 0, .22)); fg.addColorStop(.3, p.color);
   fg.addColorStop(.62, mix(p.color, 255, .1)); fg.addColorStop(1, mix(p.color, 0, .26));

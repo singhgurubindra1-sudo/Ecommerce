@@ -4,38 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FOR ME Studios</title>
-<meta name="description" content="FOR ME Studios — quiet, considered clothing made in small batches.">
-<meta name="theme-color" content="#f3e8da">
+<meta name="description" content="FOR ME Studios — considered clothing made in small batches.">
+<meta name="theme-color" content="#5b2bff">
 <link rel="icon" type="image/png" href="assets/logo-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body data-theme="light" data-scene="0">
+<body>
 
-<div class="bg bg-light" aria-hidden="true"></div>
-<div class="bg bg-dark" aria-hidden="true"></div>
-<canvas id="gl" aria-hidden="true"></canvas>
-<div class="grain" aria-hidden="true"></div>
-
-<!-- Loader -->
 <div id="loader">
   <div class="loader-logo" role="img" aria-label="FOR ME Studios"></div>
   <div class="loader-bar"><span id="loader-fill"></span></div>
 </div>
 
-<!-- Navigation -->
-<header class="nav">
-  <button class="brand" data-go="0" aria-label="FOR ME Studios, home">
+<header class="nav" id="nav">
+  <button class="brand" data-go="home" aria-label="FOR ME Studios, home">
     <span class="brand-mark" aria-hidden="true"></span>
     <span class="brand-text"><b>FOR ME</b><i>STUDIOS</i></span>
   </button>
   <nav class="nav-links" aria-label="Main">
-    <button data-go="0">Home</button>
-    <button data-go="1">Collection</button>
-    <button data-go="2">The Studio</button>
-    <button data-go="3">Contact</button>
+    <button data-go="home">Home</button>
+    <button data-go="collection">Collection</button>
+    <button data-go="studio">The Studio</button>
+    <button data-go="contact">Contact</button>
   </nav>
   <div class="nav-actions">
     <button id="bag-btn" class="bag-btn" aria-label="Open bag">Bag <span id="bag-count">0</span></button>
@@ -44,38 +37,38 @@
 </header>
 
 <main>
-  <!-- Scene 0 : Hero -->
-  <section class="scene scene-hero" data-scene="0">
+  <section class="hero" id="home">
+    <canvas id="gl" aria-hidden="true"></canvas>
     <div class="hero-copy">
-      <p class="eyebrow rv">Autumn / Winter 2026</p>
-      <h1 class="display rv">Dressed<br><em>for me.</em></h1>
-      <p class="lede rv">Quiet, considered clothing made in small batches. Pieces that feel like yours from the first wear.</p>
-      <button class="btn rv" data-go="1">Enter the collection <span class="arrow">→</span></button>
+      <p class="eyebrow">Autumn / Winter 2026</p>
+      <h1 class="display">Dressed<br><em>for me.</em></h1>
+      <p class="lede">Bright, considered clothing made in small batches. Pieces that feel like yours from the first wear.</p>
+      <button class="btn" data-go="collection">Shop the collection <span class="arrow">→</span></button>
     </div>
-    <div class="hint rv"><span class="hint-line"></span>Scroll, swipe or use the arrow keys</div>
   </section>
 
-  <!-- Scene 1 : Collection -->
-  <section class="scene scene-collection" data-scene="1">
-    <p class="eyebrow corner rv">The Autumn Edit · <span id="p-count">8</span> pieces</p>
-    <button class="round-btn prev rv" id="prev-btn" aria-label="Previous piece">←</button>
-    <button class="round-btn next rv" id="next-btn" aria-label="Next piece">→</button>
-    <img id="fallback-card" alt="" hidden>
-    <div class="p-info rv" id="p-info">
-      <p class="p-index"><span id="p-num">01</span> / <span id="p-total">08</span></p>
-      <h2 class="p-name" id="p-name">—</h2>
-      <p class="p-meta"><span id="p-cat"></span><span class="dot">·</span><span id="p-price"></span></p>
-      <button class="btn" id="view-btn">View piece <span class="arrow">→</span></button>
+  <div class="ticker" aria-hidden="true"><div class="ticker-run">
+    <span>New season</span><b>✦</b><span>Small batches</span><b>✦</b><span>Natural fibres</span><b>✦</b><span>Free repairs for life</span><b>✦</b>
+    <span>New season</span><b>✦</b><span>Small batches</span><b>✦</b><span>Natural fibres</span><b>✦</b><span>Free repairs for life</span><b>✦</b>
+  </div></div>
+
+  <section class="collection" id="collection">
+    <div class="wrap">
+      <header class="sec-head rv">
+        <p class="eyebrow">The Autumn Edit · <span id="p-count">8</span> pieces</p>
+        <h2 class="display sm">The <em>collection.</em></h2>
+      </header>
+      <div class="grid" id="grid"></div>
     </div>
-    <p class="drag-hint rv">Drag to turn</p>
   </section>
 
-  <!-- Scene 2 : Studio / story -->
-  <section class="scene scene-story" data-scene="2">
-    <div class="story-copy">
-      <p class="eyebrow rv">The Studio</p>
-      <h2 class="display sm rv">Made slowly.<br><em>Worn endlessly.</em></h2>
-      <p class="lede rv">FOR ME began with one question: what would you wear if nobody else had a say? Every piece is cut in small runs, from natural fibres, in shades that sit well together.</p>
+  <section class="studio" id="studio">
+    <div class="wrap">
+      <div class="studio-copy rv">
+        <p class="eyebrow">The Studio</p>
+        <h2 class="display sm">Made slowly.<br><em>Worn endlessly.</em></h2>
+        <p class="lede">FOR ME began with one question: what would you wear if nobody else had a say? Every piece is cut in small runs, from natural fibres, in colours that sit well together.</p>
+      </div>
       <ul class="values rv">
         <li><b>Small batches</b><span>No overproduction. When a run is gone, it is gone.</span></li>
         <li><b>Natural fibres</b><span>Wool, cotton, linen and silk, chosen by hand.</span></li>
@@ -84,41 +77,34 @@
     </div>
   </section>
 
-  <!-- Scene 3 : Contact -->
-  <section class="scene scene-contact" data-scene="3">
-    <div class="contact-copy">
-      <p class="eyebrow rv">Stay close</p>
-      <h2 class="display sm rv">Join <em>the studio.</em></h2>
-      <p class="lede rv">Early access to new runs, restock notes and nothing else.</p>
-      <form class="news rv" id="news-form" novalidate>
-        <label class="sr" for="news-email">Email address</label>
-        <input id="news-email" type="email" placeholder="Your email address" autocomplete="email" required>
-        <button class="btn" type="submit">Subscribe</button>
-      </form>
+  <section class="contact" id="contact">
+    <div class="wrap">
+      <div class="contact-copy rv">
+        <p class="eyebrow">Stay close</p>
+        <h2 class="display sm">Join <em>the studio.</em></h2>
+        <p class="lede">Early access to new runs, restock notes and nothing else.</p>
+        <form class="news" id="news-form" novalidate>
+          <label class="sr" for="news-email">Email address</label>
+          <input id="news-email" type="email" placeholder="Your email address" autocomplete="email" required>
+          <button class="btn" type="submit">Subscribe</button>
+        </form>
+      </div>
       <div class="foot rv">
-        <div><b>Shop</b><button data-go="1">Collection</button><button data-go="2">The Studio</button></div>
+        <div><b>Shop</b><button data-go="collection">Collection</button><button data-go="studio">The Studio</button></div>
         <div><b>Help</b><span>Shipping</span><span>Returns</span><span>Size guide</span></div>
         <div><b>Follow</b><span>Instagram</span><span>Pinterest</span><span>TikTok</span></div>
       </div>
-      <p class="copy rv">© 2026 FOR ME Studios. All rights reserved.</p>
+      <p class="copy">© 2026 FOR ME Studios. All rights reserved.</p>
     </div>
   </section>
 </main>
 
-<!-- Scene rail -->
-<nav class="rail" aria-label="Sections">
-  <button data-go="0" aria-label="Home"><i>Home</i></button>
-  <button data-go="1" aria-label="Collection"><i>Collection</i></button>
-  <button data-go="2" aria-label="The Studio"><i>The Studio</i></button>
-  <button data-go="3" aria-label="Contact"><i>Contact</i></button>
-</nav>
-
 <div id="scrim"></div>
 
-<!-- Product detail -->
 <aside id="detail" class="panel" aria-hidden="true" aria-label="Product details">
   <button class="close" data-close aria-label="Close">×</button>
   <div class="panel-body">
+    <img id="d-img" class="d-img" alt="">
     <p class="eyebrow" id="d-cat"></p>
     <h2 class="d-name" id="d-name"></h2>
     <p class="d-price" id="d-price"></p>
@@ -138,7 +124,6 @@
   </div>
 </aside>
 
-<!-- Bag -->
 <aside id="cart" class="panel" aria-hidden="true" aria-label="Your bag">
   <button class="close" data-close aria-label="Close">×</button>
   <div class="panel-body">
@@ -152,17 +137,15 @@
   </div>
 </aside>
 
-<!-- Mobile menu -->
 <div id="menu" aria-hidden="true">
   <button class="close" data-close aria-label="Close">×</button>
-  <button data-go="0">Home</button>
-  <button data-go="1">Collection</button>
-  <button data-go="2">The Studio</button>
-  <button data-go="3">Contact</button>
+  <button data-go="home">Home</button>
+  <button data-go="collection">Collection</button>
+  <button data-go="studio">The Studio</button>
+  <button data-go="contact">Contact</button>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
-<div class="cursor" aria-hidden="true"></div>
 
 <script type="module" src="js/main.js"></script>
 </body>
