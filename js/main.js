@@ -1,4 +1,4 @@
-import { PRODUCTS, SIZES, CURRENCY } from './products.js';
+import { PRODUCTS, SIZES, CURRENCY } from './products.js?v=2';
 import { drawCard, drawPhotoCard } from './cards.js';
 import { initHero } from './hero.js';
 import { INDIA } from './india.js';
