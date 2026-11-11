@@ -10,6 +10,17 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const byId = id => PRODUCTS.find(p => p.id === id);
 
+// Selling price, then the struck-through MRP and the saving when a piece has one.
+function priceNodes(p) {
+  const nodes = [el('span', 'now', money(p.price))];
+  if (p.mrp > p.price) {
+    const was = el('s', 'was', money(p.mrp));
+    was.setAttribute('aria-label', `MRP ${money(p.mrp)}`);
+    nodes.push(was, el('span', 'off', `${Math.round((1 - p.price / p.mrp) * 100)}% off`));
+  }
+  return nodes;
+}
+
 const state = { current: 0, size: 'M', qty: 1, checkout: [], fromCart: false, rating: 5, ticketType: '' };
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -49,7 +60,8 @@ function makeCard(p, reveal, n = 0) {
   heart.dataset.wish = p.id;
   heart.addEventListener('click', () => toggleWish(p.id));
   const meta = el('p', '', p.cat);
-  meta.append(el('b', '', money(p.price)));
+  const price = el('b'); price.append(...priceNodes(p));
+  meta.append(price);
   card.append(pic, heart);
   if (p.badge) card.append(el('span', 'badge', p.badge));
   card.append(el('h3', '', p.name), meta);
@@ -124,7 +136,7 @@ function fillProduct(p) {
   showImage(p, 0);
   $('#d-cat').textContent = p.cat;
   $('#d-name').textContent = p.name;
-  $('#d-price').textContent = money(p.price);
+  $('#d-price').replaceChildren(...priceNodes(p));
   $('#d-desc').textContent = p.desc;
   $('#d-tone').textContent = p.tone;
   document.title = `${p.name} · FOR ME Studios`;

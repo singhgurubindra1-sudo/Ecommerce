@@ -3,10 +3,13 @@
 // (portrait, roughly 8:11) and it replaces the drawn illustration on the card.
 // Real pieces use  images: [...]  (first one is the cover; the rest fill the gallery).
 
+// price is what the customer pays. mrp is the list price shown struck through;
+// the "% off" label is worked out from the two. Leave mrp out to show no discount.
+
 export const CURRENCY = '₹';
 
 export const PRODUCTS = [
-  { id: 'sunehri-lehenga', name: 'Sunehri Lehenga Set', cat: 'Lehenga Sets', price: 4999, tone: 'Marigold Yellow',
+  { id: 'sunehri-lehenga', name: 'Sunehri Lehenga Set', cat: 'Lehenga Sets', price: 4999, mrp: 9099, tone: 'Marigold Yellow',
     images: ['assets/products/sunehri-1.webp', 'assets/products/sunehri-2.webp', 'assets/products/sunehri-3.webp', 'assets/products/sunehri-4.webp', 'assets/products/sunehri-5.webp'],
     desc: 'Sunshine you can wear. A richly embroidered marigold blouse and a sweeping, high-waisted skirt, made for haldi mornings, mehendi afternoons and every celebration in between.',
     story: [
@@ -30,7 +33,7 @@ export const PRODUCTS = [
       ['Blouse lining', 'Soft cotton satin for comfort and breathability'],
       ['Skirt lining', 'Smooth crepe and satin lining for opacity and an even fall'],
     ] },
-  { id: 'gulbahar-coord', name: 'Gulbahar Co-ord Set', cat: 'Co-ord Sets', price: 5499, tone: 'Ivory & Burgundy',
+  { id: 'gulbahar-coord', name: 'Gulbahar Co-ord Set', cat: 'Co-ord Sets', price: 5499, mrp: 8749, tone: 'Ivory & Burgundy',
     images: ['assets/products/gulbahar-1.webp', 'assets/products/gulbahar-2.webp', 'assets/products/gulbahar-3.png', 'assets/products/gulbahar-4.png', 'assets/products/gulbahar-5.png'],
     desc: 'A garden in full bloom, stitched in thread. An ivory corset-style kurta with dramatic sheer bell sleeves and flared trousers, traced all over with burgundy flowers, gold leaves and pearls.',
     story: [
@@ -57,7 +60,7 @@ export const PRODUCTS = [
       ['Contrast panels and piping', 'Burgundy satin for a rich finish'],
       ['Lining', 'Soft cotton lining in the bodice and trousers for comfort and coverage'],
     ] },
-  { id: 'noor-crossover-top', name: 'Noor Crossover Top', cat: 'Tops', price: 1199, tone: 'Black',
+  { id: 'noor-crossover-top', name: 'Noor Crossover Top', cat: 'Tops', price: 1199, mrp: 1849, tone: 'Black',
     images: ['assets/products/noor-1.webp', 'assets/products/noor-2.webp'],
     desc: 'The black top that does the talking. A fitted, cropped long-sleeve with a crossover halter neckline at the front and an open cut-out at the back.',
     story: [

@@ -14,7 +14,7 @@ Then open http://localhost:8000.
 
 ## Edit the products
 
-Everything lives in `js/products.js`: name, category, price, colour and description. Add `image: 'assets/products/photo.jpg'` to a piece to show a real photo (portrait, about 8:11) instead of the drawn illustration. `CURRENCY` at the top sets the currency symbol.
+Everything lives in `js/products.js`: name, category, price, colour and description. `price` is what the customer pays; `mrp` is the list price shown struck through next to it, and the "% off" label is worked out from the two. Leave `mrp` out to show no discount. Add `image: 'assets/products/photo.jpg'` to a piece to show a real photo (portrait, about 8:11) instead of the drawn illustration. `CURRENCY` at the top sets the currency symbol.
 
 ## Files
 
