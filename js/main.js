@@ -1,4 +1,4 @@
-import { PRODUCTS, SIZES, CURRENCY, COUPONS } from './products.js?v=3';
+import { PRODUCTS, SIZES, CURRENCY, COUPONS } from './products.js?v=4';
 import { drawCard, drawPhotoCard } from './cards.js';
 import { initHero } from './hero.js';
 import { INDIA } from './india.js';
@@ -105,7 +105,8 @@ function buildTicker() {
   const run = $('#ticker-run');
   for (let n = 0; n < 4; n++) {
     COUPONS.forEach(c => {
-      const offer = el('span', 'tk-offer', c.strip + ' · use code');
+      const offer = el('span', 'tk-offer');
+      offer.append(el('em', '', `${c.percent}% off`), `${c.strip} · use code`);
       const code = el('button', 'tk-code', c.code); code.type = 'button'; code.tabIndex = -1;
       code.addEventListener('click', () => { navigator.clipboard?.writeText(c.code).catch(() => {}); if (setCoupon(c.code, true)) toast(`${c.code} copied and applied. ${c.percent}% off shows in your cart.`); else toast(couponMsg); });
       offer.append(code);

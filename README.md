@@ -26,6 +26,6 @@ Everything lives in `js/products.js`: name, category, price, colour and descript
 - `js/vendor/` – three.js r170 (MIT)
 - `assets/` – logo files
 
-Coupon codes live in `COUPONS` in `js/products.js` (currently `FORME10`, 10% off a first order, and `WINTER5`, 5% off). They run in the yellow strip and are applied in the cart or at checkout, one per order.
+Coupon codes live in `COUPONS` in `js/products.js` (currently `FORME10`, 10% off a first order, and `WINTER5`, 5% off). They run in the moving offer strip and are applied in the cart or at checkout, one per order.
 
 Prices are in INR. The cart, wishlist, feedback, support tickets and placed orders are saved only in the visitor's own browser (localStorage). Nothing is sent to a server yet, so orders do not reach the shop until a backend is connected.
