@@ -80,4 +80,12 @@ export const PRODUCTS = [
     ] },
 ];
 
+// Coupon codes. percent is taken off the order subtotal; one code per order.
+// firstOrder: true limits a code to shoppers who have not ordered before.
+// strip is the line that runs in the yellow strip, title and note show in the cart.
+export const COUPONS = [
+  { code: 'FORME10', percent: 10, firstOrder: true, strip: '10% off your first purchase', title: 'First purchase', note: '10% off your first order' },
+  { code: 'WINTER5', percent: 5, strip: 'Winter deal · 5% off everything', title: 'Winter deal', note: '5% off everything this winter' },
+];
+
 export const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];

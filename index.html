@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap">
-<link rel="stylesheet" href="css/style.css?v=2">
+<link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
 
@@ -49,12 +49,7 @@
     </div>
   </section>
 
-  <div class="ticker" aria-hidden="true"><div class="ticker-run">
-    <span>Only at FOR ME</span><b>✦</b><span>Limited pieces</span><b>✦</b><span>Made for occasions</span><b>✦</b><span>Cash on delivery</span><b>✦</b>
-    <span>Only at FOR ME</span><b>✦</b><span>Limited pieces</span><b>✦</b><span>Made for occasions</span><b>✦</b><span>Cash on delivery</span><b>✦</b>
-    <span>Only at FOR ME</span><b>✦</b><span>Limited pieces</span><b>✦</b><span>Made for occasions</span><b>✦</b><span>Cash on delivery</span><b>✦</b>
-    <span>Only at FOR ME</span><b>✦</b><span>Limited pieces</span><b>✦</b><span>Made for occasions</span><b>✦</b><span>Cash on delivery</span><b>✦</b>
-  </div></div>
+  <div class="ticker" aria-hidden="true"><div class="ticker-run" id="ticker-run"></div></div>
 
   <section class="studio" id="studio">
     <div class="wrap">
@@ -166,7 +161,7 @@
     <h2 class="d-name">Your cart</h2>
     <div id="cart-items" class="items"></div>
     <div class="cart-foot" id="cart-foot">
-      <p class="sub"><span>Subtotal</span><b id="cart-total"></b></p>
+      <div id="cart-totals" class="totals"></div>
       <button class="btn solid" id="checkout-btn">Checkout</button>
       <p class="fine">Pay by Cash on Delivery.</p>
     </div>
@@ -226,7 +221,7 @@
     <div class="co-sum">
       <h3 class="co-h">Order summary</h3>
       <div id="co-items" class="items"></div>
-      <p class="sub"><span>Total to pay on delivery</span><b id="co-total"></b></p>
+      <div id="co-totals" class="totals"></div>
     </div>
   </div>
   <div class="co-done" id="co-done" hidden>
@@ -248,6 +243,6 @@
 
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script type="module" src="js/main.js?v=2"></script>
+<script type="module" src="js/main.js?v=3"></script>
 </body>
 </html>

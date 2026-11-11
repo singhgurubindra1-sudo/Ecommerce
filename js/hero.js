@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.min.js';
 import { starSprite } from './cards.js';
-import { PRODUCTS } from './products.js?v=2';
+import { PRODUCTS } from './products.js?v=3';
 
 const $ = s => document.querySelector(s);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;

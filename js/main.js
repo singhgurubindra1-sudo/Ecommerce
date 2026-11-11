@@ -1,4 +1,4 @@
-import { PRODUCTS, SIZES, CURRENCY } from './products.js?v=2';
+import { PRODUCTS, SIZES, CURRENCY, COUPONS } from './products.js?v=3';
 import { drawCard, drawPhotoCard } from './cards.js';
 import { initHero } from './hero.js';
 import { INDIA } from './india.js';
@@ -31,6 +31,89 @@ const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } cat
 let bag = load('forme-bag', {});
 let wish = load('forme-wish', []).filter(byId);
 let feedback = load('forme-feedback', []);
+
+/* ------------------------------------------------------------------ coupons */
+let couponCode = load('forme-coupon', '');
+let couponMsg = '';
+const hasOrdered = () => load('forme-orders', []).length > 0;
+const findCoupon = code => COUPONS.find(c => c.code === String(code).trim().toUpperCase());
+const couponProblem = c => (c.firstOrder && hasOrdered() ? `${c.code} is only for your first order.` : '');
+function totals(lines) {
+  const subtotal = lines.reduce((s, l) => s + l.p.price * l.qty, 0);
+  const c = findCoupon(couponCode);
+  const coupon = c && !couponProblem(c) ? c : null;
+  const discount = coupon ? Math.round(subtotal * coupon.percent / 100) : 0;
+  return { subtotal, discount, total: subtotal - discount, coupon };
+}
+function setCoupon(code, quiet) {
+  const c = code ? findCoupon(code) : null;
+  const problem = !code ? '' : !c ? 'That code is not valid. Check the spelling and try again.' : couponProblem(c);
+  if (code && problem) couponMsg = problem;
+  else { couponCode = c ? c.code : ''; couponMsg = ''; save('forme-coupon', couponCode); }
+  renderBag(); renderCheckout();
+  if (!quiet && c && !problem) toast(`${c.code} applied: ${c.percent}% off your order`);
+  return !problem;
+}
+// The "apply coupon" block shown in the cart and in the checkout summary.
+function couponBox(lines) {
+  const box = el('div', 'coupon');
+  const { coupon, discount } = totals(lines);
+  if (coupon) {
+    const on = el('div', 'coupon-on');
+    const text = el('p'); text.append(el('b', '', coupon.code), ` applied. You save ${money(discount)}.`);
+    const rm = el('button', '', 'Remove'); rm.type = 'button';
+    rm.addEventListener('click', () => setCoupon(''));
+    on.append(el('span', 'coupon-tick', '✓'), text, rm);
+    box.append(on);
+    return box;
+  }
+  box.append(el('h3', 'co-h', 'Apply coupon code'));
+  const row = el('div', 'coupon-row');
+  const input = el('input'); input.type = 'text'; input.placeholder = 'Enter code'; input.maxLength = 20; input.autocapitalize = 'characters'; input.spellcheck = false;
+  input.setAttribute('aria-label', 'Coupon code');
+  const btn = el('button', 'mini', 'Apply'); btn.type = 'button';
+  const apply = () => { if (input.value.trim()) setCoupon(input.value); else { couponMsg = 'Enter a coupon code first.'; renderBag(); renderCheckout(); } };
+  btn.addEventListener('click', apply);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
+  row.append(input, btn);
+  const msg = el('p', 'co-err', couponMsg); msg.setAttribute('role', 'alert');
+  box.append(row, msg);
+  const offers = el('div', 'offers');
+  COUPONS.forEach(c => {
+    const used = !!couponProblem(c);
+    const t = el('button', 'ticket'); t.type = 'button'; t.disabled = used;
+    const cut = el('span', 'ticket-cut'); cut.append(el('b', '', `${c.percent}%`), el('i', '', 'off'));
+    const body = el('span', 'ticket-body');
+    body.append(el('small', '', c.title), el('strong', '', c.code), el('em', '', used ? 'Already used on your first order' : `${c.note} · Tap to apply`));
+    t.append(cut, body);
+    t.addEventListener('click', () => setCoupon(c.code));
+    offers.append(t);
+  });
+  box.append(offers);
+  return box;
+}
+function renderTotals(holder, lines, label) {
+  const { subtotal, discount, total, coupon } = totals(lines);
+  const row = (cls, a, b) => { const p = el('p', cls); p.append(el('span', '', a), el('b', '', b)); return p; };
+  holder.textContent = '';
+  holder.append(couponBox(lines));
+  if (coupon) holder.append(row('sub small', 'Subtotal', money(subtotal)), row('sub small save', `Coupon ${coupon.code} (${coupon.percent}% off)`, '− ' + money(discount)));
+  holder.append(row('sub', label, money(total)));
+  return total;
+}
+function buildTicker() {
+  const run = $('#ticker-run');
+  for (let n = 0; n < 4; n++) {
+    COUPONS.forEach(c => {
+      const offer = el('span', 'tk-offer', c.strip + ' · use code');
+      const code = el('button', 'tk-code', c.code); code.type = 'button'; code.tabIndex = -1;
+      code.addEventListener('click', () => { navigator.clipboard?.writeText(c.code).catch(() => {}); if (setCoupon(c.code, true)) toast(`${c.code} copied and applied. ${c.percent}% off shows in your cart.`); else toast(couponMsg); });
+      offer.append(code);
+      run.append(offer, el('b', '', '✦'));
+    });
+    run.append(el('span', '', 'Cash on delivery'), el('b', '', '✦'), el('span', '', 'Only at FOR ME'), el('b', '', '✦'));
+  }
+}
 
 /* ------------------------------------------------------------------ product images */
 const thumbs = {};
@@ -175,9 +258,9 @@ function renderBag() {
   const lines = cartLines(), wrap = $('#cart-items');
   wrap.textContent = '';
   if (!lines.length) wrap.append(el('p', 'empty', 'Your cart is empty. Pick something you love from the collection.'));
-  let total = 0, count = 0;
+  let count = 0;
   lines.forEach(({ key, p, size, qty }) => {
-    total += p.price * qty; count += qty;
+    count += qty;
     const q = el('div', 'qty');
     const minus = el('button', '', '−'), plus = el('button', '', '+');
     minus.setAttribute('aria-label', 'Decrease quantity'); plus.setAttribute('aria-label', 'Increase quantity');
@@ -189,7 +272,7 @@ function renderBag() {
     minus.addEventListener('click', () => change(-1)); plus.addEventListener('click', () => change(1)); rm.addEventListener('click', () => change(0));
     wrap.append(itemRow(p, `${p.tone} · Size ${size}`, side, q));
   });
-  $('#cart-total').textContent = money(total);
+  renderTotals($('#cart-totals'), lines, 'Total');
   $('#cart-foot').hidden = !lines.length;
   $('#bag-count').textContent = count;
 }
@@ -239,19 +322,21 @@ function renderWish() {
 function openCheckout(lines, fromCart) {
   if (!lines.length) return;
   state.checkout = lines; state.fromCart = fromCart;
+  couponMsg = '';
   const wrap = $('#co-items'); wrap.textContent = '';
-  let total = 0;
   lines.forEach(({ p, size, qty }) => {
-    total += p.price * qty;
     const side = el('div', 'item-side'); side.append(el('span', '', money(p.price * qty)));
     wrap.append(itemRow(p, `${p.tone} · Size ${size} · Qty ${qty}`, side));
   });
-  $('#co-total').textContent = $('#co-total-btn').textContent = money(total);
+  renderCheckout();
   $('#co-err').textContent = '';
   $('#co-main').hidden = false; $('#co-done').hidden = true;
   ['#cart', '#wish', '#support'].forEach(x => setOpen(x, false));
   setOpen('#checkout', true);
   $('#checkout').scrollTop = 0;
+}
+function renderCheckout() {
+  $('#co-total-btn').textContent = money(renderTotals($('#co-totals'), state.checkout, 'Total to pay on delivery'));
 }
 const OTHER = 'Other';
 function fillCities() {
@@ -276,14 +361,16 @@ function placeOrder(e) {
   ];
   const bad = checks.find(c => !c[1]);
   if (bad) { $('#co-err').textContent = bad[2]; $(bad[0]).focus(); return; }
-  const total = state.checkout.reduce((s, l) => s + l.p.price * l.qty, 0);
+  const { subtotal, discount, total, coupon } = totals(state.checkout);
   const order = {
-    id: 'FM' + Date.now().toString(36).toUpperCase().slice(-7), date: new Date().toISOString(), payment: 'Cash on Delivery', total,
+    id: 'FM' + Date.now().toString(36).toUpperCase().slice(-7), date: new Date().toISOString(), payment: 'Cash on Delivery', subtotal, discount, coupon: coupon?.code || '', total,
     items: state.checkout.map(l => ({ id: l.p.id, name: l.p.name, size: l.size, qty: l.qty, price: l.p.price })),
     customer: { name: v('#co-name'), phone: '+91 ' + v('#co-phone'), address: v('#co-address'), city: v('#co-city') === OTHER ? v('#co-city-other') : v('#co-city'), state: v('#co-state'), pin: v('#co-pin') },
   };
   save('forme-orders', [...load('forme-orders', []), order]);
-  if (state.fromCart) { bag = {}; save('forme-bag', bag); renderBag(); }
+  couponCode = ''; couponMsg = ''; save('forme-coupon', couponCode);
+  if (state.fromCart) { bag = {}; save('forme-bag', bag); }
+  renderBag();
   $('#co-done-text').textContent = `Thank you, ${order.customer.name.split(' ')[0]}. Your order ${order.id} is confirmed. Please keep ${money(total)} ready in cash for delivery.`;
   $('#co-main').hidden = true; $('#co-done').hidden = false;
   $('#checkout').scrollTop = 0;
@@ -361,6 +448,7 @@ function toast(msg) {
 
 /* ------------------------------------------------------------------ UI */
 function bindUI() {
+  buildTicker();
   $$('[data-go]').forEach(b => b.addEventListener('click', () => { closeAll(); go(b.dataset.go); }));
   $('#back-btn').addEventListener('click', () => (cameFromSite ? history.back() : go('collection')));
   addEventListener('hashchange', route);
