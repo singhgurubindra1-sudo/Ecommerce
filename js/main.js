@@ -1,6 +1,7 @@
 import { PRODUCTS, SIZES, CURRENCY, COUPONS } from './products.js?v=4';
 import { drawCard, drawPhotoCard } from './cards.js';
-import { initHero } from './hero.js';
+import { initHero } from './hero.js?v=5';
+import { initWinter } from './winter.js?v=5';
 import { INDIA } from './india.js';
 
 const $ = s => document.querySelector(s);
@@ -527,6 +528,8 @@ async function boot() {
   await buildCards();
   renderGrid();
   fill.style.width = '75%';
+  initWinter($('#home'));
+  $('#sale-max').textContent = Math.max(...PRODUCTS.map(p => (p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0)));
   try { initHero(); } catch (err) { console.warn('WebGL unavailable', err); $('#gl').style.display = 'none'; }
   bindUI();
   renderBag(); renderWish(); syncWish(); renderFeedback();

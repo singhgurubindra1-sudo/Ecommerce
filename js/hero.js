@@ -60,7 +60,7 @@ export function initHero() {
   }
   const sg = new THREE.BufferGeometry();
   sg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const stars = new THREE.Points(sg, new THREE.PointsMaterial({ map: new THREE.CanvasTexture(starSprite()), size: .36, transparent: true, opacity: .85, depthWrite: false, color: 0xfff1b8 }));
+  const stars = new THREE.Points(sg, new THREE.PointsMaterial({ map: new THREE.CanvasTexture(starSprite()), size: .36, transparent: true, opacity: .85, depthWrite: false, color: 0xffffff }));
   scene.add(stars);
 
   // Product photos floating around the cloth (desktop only)
@@ -89,7 +89,7 @@ export function initHero() {
     renderer.setSize(w, h, false);
     camera.aspect = a; camera.updateProjectionMatrix();
     const d = Math.max(8.6, (4.2 * 1.3) / (2 * TAN * a)), vh = 2 * d * TAN, vw = vh * a;
-    if (w <= 860) camera.position.set(0, -vh * .2, d); else camera.position.set(-vw * .21, 0, d);
+    if (w <= 860) camera.position.set(0, -vh * .25, d); else camera.position.set(-vw * .21, 0, d);
     photos.visible = w > 1000;
   }
   resize();

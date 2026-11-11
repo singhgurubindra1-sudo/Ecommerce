@@ -106,11 +106,38 @@ body.ready #loader { opacity: 0; visibility: hidden; }
 /* Hero */
 .hero {
   position: relative; min-height: 100vh; min-height: 100svh; overflow: hidden;
-  background: linear-gradient(125deg, #ff2f87 0%, #ff5a6e 45%, #ff8a3c 100%);
+  background: linear-gradient(165deg, #0a2545 0%, #14508c 42%, #3f9bd6 78%, #a9defa 100%);
   display: flex; align-items: flex-end;
 }
 #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.hero-copy { position: relative; padding: 120px var(--pad) clamp(48px, 10vh, 110px); display: flex; flex-direction: column; align-items: flex-start; gap: 24px; max-width: 56vw; }
+.hero-copy { position: relative; padding: 120px var(--pad) clamp(140px, 19vh, 190px); display: flex; flex-direction: column; align-items: flex-start; gap: 24px; max-width: 56vw; }
+
+.hero .display { font-size: clamp(60px, 9.4vw, 150px); text-shadow: 0 6px 30px rgba(10, 37, 69, .35); }
+.hero .lede b { font-weight: 500; letter-spacing: .1em; color: var(--yellow); }
+.sale-tag { display: inline-flex; align-items: baseline; gap: 12px; padding: 10px 26px 12px; border-radius: 999px; background: linear-gradient(120deg, var(--pink), var(--orange)); color: #fff; font-size: clamp(13px, 1.2vw, 16px); letter-spacing: .3em; text-transform: uppercase; font-weight: 500; box-shadow: 0 10px 30px rgba(255, 61, 139, .45); transform: rotate(-2deg); animation: sale-pop 2.4s ease-in-out infinite; }
+.sale-tag b { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: clamp(38px, 4.6vw, 64px); line-height: .9; letter-spacing: 0; color: var(--yellow); }
+.hero .btn.solid { background: var(--cream); color: var(--ink); border-color: var(--cream); }
+.hero .btn.solid:hover { background: var(--yellow); border-color: var(--yellow); color: var(--ink); }
+@keyframes sale-pop { 50% { transform: rotate(-2deg) scale(1.05); } }
+
+/* Winter banner: snowflakes, snowbank and snowmen. These keep moving on every device. */
+.winter { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.flake { position: absolute; top: -40px; color: #fff; line-height: 1; text-shadow: 0 0 8px rgba(255, 255, 255, .7); animation: snow-fall linear infinite; will-change: transform; }
+@keyframes snow-fall { to { transform: translate3d(var(--dx), calc(100vh + 90px), 0) rotate(360deg); } }
+.snowbank { position: absolute; left: 0; bottom: -1px; width: 100%; height: clamp(64px, 11vh, 110px); display: block; }
+.snowman { position: absolute; left: 0; bottom: clamp(14px, 3vh, 30px); width: clamp(78px, 8.5vw, 124px); will-change: transform; }
+.snowman svg { display: block; width: 100%; height: auto; overflow: visible; transform-origin: 50% 96%; animation: sm-wobble .7s ease-in-out infinite alternate; }
+.sm-arm { transform-origin: 84px 70px; animation: sm-wave .9s ease-in-out infinite alternate; }
+.sm-walk { animation: sm-walk 26s linear infinite; }
+.sm-back { width: clamp(56px, 6vw, 86px); bottom: clamp(34px, 6.5vh, 62px); opacity: .92; animation: sm-walk 38s linear infinite reverse; animation-delay: -12s; }
+.sm-back .sm-in { transform: scaleX(-1); }
+.sm-wave { left: auto; right: clamp(12px, 5vw, 80px); bottom: clamp(20px, 4vh, 40px); }
+.sm-wave svg { animation: sm-hop 1.4s ease-in-out infinite; }
+.sm-wave .sm-arm { animation-duration: .35s; }
+@keyframes sm-walk { from { transform: translateX(-18vw); } to { transform: translateX(104vw); } }
+@keyframes sm-wobble { from { transform: rotate(-6deg); } to { transform: rotate(6deg) translateY(-4px); } }
+@keyframes sm-wave { from { transform: rotate(-14deg); } to { transform: rotate(18deg); } }
+@keyframes sm-hop { 0%, 100% { transform: translateY(0) scaleY(1); } 45% { transform: translateY(-16px) scaleY(1.03); } 60% { transform: translateY(0) scaleY(.96); } }
 
 /* Ticker: the offer strip. It always scrolls, also for visitors with "reduce motion" on. */
 .ticker { position: relative; background: var(--ink); color: var(--cream); overflow: hidden; padding: 15px 0; }
@@ -295,7 +322,9 @@ body.panel-open #scrim { opacity: 1; visibility: visible; }
   .nav-links { display: none; }
   .menu-btn { display: flex; }
   .brand-mark { width: 32px; height: 32px; }
-  .hero-copy { max-width: none; gap: 16px; padding-bottom: 44px; }
+  .hero { min-height: max(100svh, 870px); }
+  .hero-copy { max-width: none; gap: 14px; padding-bottom: 130px; }
+  .sm-wave { display: none; }
   .display { font-size: clamp(56px, 17vw, 110px); }
   .grid .card { width: calc((100% - var(--g)) / 2); }
   .card-pic::after { display: none; }

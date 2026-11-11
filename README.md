@@ -12,6 +12,10 @@ python3 -m http.server 8000
 
 Then open http://localhost:8000.
 
+## Winter sale banner
+
+The home banner is dressed for the winter sale: the text is in `index.html` (`.hero-copy`), the snow and snowmen are in `js/winter.js`. The "up to N% off" number is the biggest discount in `js/products.js`. To go back to the plain banner, remove the `initWinter` line in `js/main.js` and restore the text.
+
 ## Edit the products
 
 Everything lives in `js/products.js`: name, category, price, colour and description. `price` is what the customer pays; `mrp` is the list price shown struck through next to it, and the "% off" label is worked out from the two. Leave `mrp` out to show no discount. Add `image: 'assets/products/photo.jpg'` to a piece to show a real photo (portrait, about 8:11) instead of the drawn illustration. `CURRENCY` at the top sets the currency symbol.
