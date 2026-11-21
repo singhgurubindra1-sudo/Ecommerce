@@ -1,0 +1,9 @@
+# Netlify: publish only the site files, and run the payment endpoints as functions.
+# Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET under Site configuration → Environment variables.
+[build]
+  command = "rm -rf dist && mkdir dist && cp -r index.html css js assets dist/"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"

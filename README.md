@@ -31,6 +31,14 @@ The site now runs on a small Node.js server (Node 20.12 or newer), which also ha
 
 `python3 -m http.server` still shows the site, but online payment will not work there because it has no backend.
 
+## Deploy on Netlify
+
+Netlify serves static files only, so the payment endpoints run there as Netlify Functions (`netlify/functions/`). `netlify.toml` already sets this up.
+
+1. Deploy from Git: in Netlify, link this GitHub repository and choose the branch to deploy. A drag-and-drop upload does not include functions, so payments would not work.
+2. Under Site configuration → Environment variables, add `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`.
+3. Trigger a new deploy (Deploys → Trigger deploy → Deploy site). Environment variables only apply to deploys made after you add them.
+
 ## Payments (Razorpay Standard Checkout)
 
 - `POST /api/create-order` takes `{ items: [{ id, qty }] }`, prices them from `js/products.js` on the server, and creates a Razorpay order. The browser never decides the amount.
@@ -48,7 +56,9 @@ Everything lives in `js/products.js`: name, category, price, colour and descript
 
 - `index.html` – markup for the scenes, bag, product panel and menu
 - `css/style.css` – all styling
-- `server.js` – Node server: serves the site and the Razorpay order and verification endpoints
+- `lib/payments.js` – Razorpay order creation and signature check, shared by both hosts below
+- `server.js` – local Node server: serves the site and the payment endpoints
+- `netlify/functions/` – the same endpoints as Netlify Functions; `netlify.toml` configures the deploy
 - `js/main.js` – product grid, cart, wishlist, feedback, support, checkout (Razorpay or Cash on Delivery)
 - `js/india.js` – states and cities for the checkout dropdowns
 - `js/hero.js` – hero 3D cloth (three.js)
