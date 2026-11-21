@@ -223,7 +223,7 @@ function renderWish() {
   });
 }
 
-/* ------------------------------------------------------------------ checkout (Cash on Delivery only) */
+/* ------------------------------------------------------------------ checkout (online via Razorpay, or Cash on Delivery) */
 function openCheckout(lines, fromCart) {
   if (!lines.length) return;
   state.checkout = lines; state.fromCart = fromCart;
@@ -236,6 +236,7 @@ function openCheckout(lines, fromCart) {
   });
   $('#co-total').textContent = $('#co-total-btn').textContent = money(total);
   $('#co-err').textContent = '';
+  syncPay(); setBusy(false);
   $('#co-main').hidden = false; $('#co-done').hidden = true;
   ['#cart', '#wish', '#support'].forEach(x => setOpen(x, false));
   setOpen('#checkout', true);
@@ -250,8 +251,94 @@ function fillCities() {
   city.disabled = !state;
   $('#co-city-other-wrap').hidden = true;
 }
+const payMode = () => ($('#co-cod').checked ? 'cod' : 'online');
+function syncPay() {
+  const cod = payMode() === 'cod';
+  $('#co-submit-label').textContent = cod ? 'Place order' : 'Pay securely';
+  $('#co-total-label').textContent = cod ? 'Total to pay on delivery' : 'Total to pay now';
+}
+let confirming = false;
+function setBusy(on, label) {
+  const b = $('#co-submit');
+  b.disabled = on;
+  if (on) $('#co-submit-label').textContent = label; else syncPay();
+}
+const fail = msg => { confirming = false; setBusy(false); $('#co-err').textContent = msg; };
+
+async function postJson(url, body) {
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  let data = {};
+  try { data = await res.json(); } catch { /* not JSON: no payment server behind this page */ }
+  if (!res.ok) throw new Error(data.error || 'Online payment is not available right now. Choose Cash on Delivery or try again later.');
+  return data;
+}
+
+function finishOrder(order) {
+  save('forme-orders', [...load('forme-orders', []), order]);
+  if (state.fromCart) { bag = {}; save('forme-bag', bag); renderBag(); }
+  const first = order.customer.name.split(' ')[0];
+  $('#co-done-text').textContent = order.payment === 'Cash on Delivery'
+    ? `Thank you, ${first}. Your order ${order.id} is confirmed. Please keep ${money(order.total)} ready in cash for delivery.`
+    : `Thank you, ${first}. We received your payment of ${money(order.total)} and your order ${order.id} is confirmed. Payment reference: ${order.paymentId}.`;
+  confirming = false; setBusy(false);
+  $('#co-main').hidden = true; $('#co-done').hidden = false;
+  $('#checkout').scrollTop = 0;
+}
+
+async function payOnline(order) {
+  if (!window.Razorpay) return fail('The payment window could not load. Check your connection, or choose Cash on Delivery.');
+  setBusy(true, 'Starting payment…');
+  let rz;
+  try {
+    rz = await postJson('/api/create-order', { items: order.items.map(i => ({ id: i.id, qty: i.qty })) });
+  } catch (err) {
+    return fail(err.message);
+  }
+  if (rz.amount !== order.total * 100) return fail('Prices have changed since you opened this page. Refresh the page and try again.');
+
+  let lastFailure = '';
+  const checkout = new window.Razorpay({
+    key: rz.key_id,
+    order_id: rz.order_id,
+    amount: rz.amount,
+    currency: rz.currency,
+    name: 'FOR ME Studios',
+    description: order.items.map(i => `${i.name} (${i.size}) × ${i.qty}`).join(', ').slice(0, 250),
+    image: new URL('assets/logo-mark.png', location.href).href,
+    prefill: { name: order.customer.name, contact: order.customer.phone.replace(/\s/g, '') },
+    notes: { shop_order: order.id },
+    theme: { color: '#dc1470' },
+    handler: async resp => {
+      confirming = true;
+      setBusy(true, 'Confirming payment…');
+      try {
+        const v = await postJson('/api/verify-payment', {
+          razorpay_order_id: resp.razorpay_order_id,
+          razorpay_payment_id: resp.razorpay_payment_id,
+          razorpay_signature: resp.razorpay_signature,
+        });
+        if (!v.verified) throw new Error('not verified');
+        finishOrder({ ...order, payment: 'Paid online', paymentId: resp.razorpay_payment_id, razorpayOrderId: resp.razorpay_order_id });
+      } catch {
+        fail(`We could not confirm your payment. If money was taken, raise a support ticket with payment reference ${resp.razorpay_payment_id} and we will sort it out.`);
+      }
+    },
+    modal: {
+      ondismiss: () => { if (!confirming) fail(lastFailure ? `Payment failed: ${lastFailure} Your order has not been placed.` : 'Payment cancelled. Your order has not been placed.'); },
+    },
+  });
+  // Razorpay keeps its window open after a failed attempt so the shopper can retry; remember why it failed.
+  checkout.on('payment.failed', r => {
+    lastFailure = r?.error?.description || 'please try again or choose another method.';
+    $('#co-err').textContent = `Payment failed: ${lastFailure}`;
+  });
+  setBusy(true, 'Waiting for payment…');
+  checkout.open();
+}
+
 function placeOrder(e) {
   e.preventDefault();
+  if ($('#co-submit').disabled) return;
   const v = id => $(id).value.trim();
   const checks = [
     ['#co-name', v('#co-name').length >= 2, 'Enter your full name.'],
@@ -264,17 +351,14 @@ function placeOrder(e) {
   ];
   const bad = checks.find(c => !c[1]);
   if (bad) { $('#co-err').textContent = bad[2]; $(bad[0]).focus(); return; }
+  $('#co-err').textContent = '';
   const total = state.checkout.reduce((s, l) => s + l.p.price * l.qty, 0);
   const order = {
     id: 'FM' + Date.now().toString(36).toUpperCase().slice(-7), date: new Date().toISOString(), payment: 'Cash on Delivery', total,
     items: state.checkout.map(l => ({ id: l.p.id, name: l.p.name, size: l.size, qty: l.qty, price: l.p.price })),
     customer: { name: v('#co-name'), phone: '+91 ' + v('#co-phone'), address: v('#co-address'), city: v('#co-city') === OTHER ? v('#co-city-other') : v('#co-city'), state: v('#co-state'), pin: v('#co-pin') },
   };
-  save('forme-orders', [...load('forme-orders', []), order]);
-  if (state.fromCart) { bag = {}; save('forme-bag', bag); renderBag(); }
-  $('#co-done-text').textContent = `Thank you, ${order.customer.name.split(' ')[0]}. Your order ${order.id} is confirmed. Please keep ${money(total)} ready in cash for delivery.`;
-  $('#co-main').hidden = true; $('#co-done').hidden = false;
-  $('#checkout').scrollTop = 0;
+  if (payMode() === 'online') payOnline(order); else finishOrder(order);
 }
 
 /* ------------------------------------------------------------------ feedback */
@@ -387,6 +471,7 @@ function bindUI() {
   $('#d-wish').addEventListener('click', () => toggleWish(PRODUCTS[state.current].id));
   $('#checkout-btn').addEventListener('click', () => openCheckout(cartLines(), true));
   $('#co-form').addEventListener('submit', placeOrder);
+  $$('input[name="pay"]').forEach(r => r.addEventListener('change', () => { $('#co-err').textContent = ''; syncPay(); }));
   Object.keys(INDIA).forEach(st => $('#co-state').append(new Option(st, st)));
   $('#co-state').addEventListener('change', fillCities);
   $('#co-city').addEventListener('change', () => { $('#co-city-other-wrap').hidden = $('#co-city').value !== OTHER; });

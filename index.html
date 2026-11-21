@@ -218,15 +218,17 @@
       </div>
       <div class="field" id="co-city-other-wrap" hidden><label for="co-city-other">Your city, town or village</label><input id="co-city-other" type="text" maxlength="50"></div>
       <h3 class="co-h">Payment</h3>
-      <label class="pay"><input type="radio" name="pay" id="co-cod" checked><span><b>Cash on Delivery</b><i>Pay in cash when your order arrives.</i></span></label>
-      <p class="fine left">Online payments (UPI and cards) are coming soon.</p>
+      <div class="pays">
+        <label class="pay"><input type="radio" name="pay" id="co-online" value="online" checked><span><b>Pay online</b><i>UPI, cards, netbanking and wallets, secured by Razorpay.</i></span></label>
+        <label class="pay"><input type="radio" name="pay" id="co-cod" value="cod"><span><b>Cash on Delivery</b><i>Pay in cash when your order arrives.</i></span></label>
+      </div>
       <p id="co-err" class="co-err" role="alert"></p>
-      <button class="btn solid" type="submit">Place order · <span id="co-total-btn"></span></button>
+      <button class="btn solid" type="submit" id="co-submit"><span id="co-submit-label">Pay</span> · <span id="co-total-btn"></span></button>
     </form>
     <div class="co-sum">
       <h3 class="co-h">Order summary</h3>
       <div id="co-items" class="items"></div>
-      <p class="sub"><span>Total to pay on delivery</span><b id="co-total"></b></p>
+      <p class="sub"><span id="co-total-label">Total</span><b id="co-total"></b></p>
     </div>
   </div>
   <div class="co-done" id="co-done" hidden>
@@ -248,6 +250,7 @@
 
 <div id="toast" role="status" aria-live="polite"></div>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

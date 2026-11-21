@@ -1,0 +1,14 @@
+{
+  "name": "forme-studios",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "razorpay": "^2.9.8"
+  }
+}
